@@ -1,0 +1,18 @@
+Please take a look at these:
+https://www.mathworks.com/videos/importing-your-data-into-matlab-1567682718882.html
+https://www.mathworks.com/videos/preprocessing-your-data-in-matlab-1567682389263.html
+https://www.mathworks.com/videos/analyzing-data-with-matlab-1567682353915.html
+https://www.mathworks.com/videos/predictive-modeling-1567681547862.html
+Also, check these out:
+Preprocessing Data 
+https://uk.mathworks.com/help/matlab/preprocessing-data.html
+Data Visualization 
+https://uk.mathworks.com/help/matlab/2-and-3d-plots.html
+Exploratory Data Analysis, Feature Extraction and Dimensionality Reduction, Machine Learning
+https://uk.mathworks.com/products/statistics.html
+
+MATLAB for Machine Learning downloaded ebook, there may be more:
+https://uk.mathworks.com/solutions/machine-learning.html
+
+INTRO And this course:https://www.youtube.com/playlist?list=PL60D54836FB8893F0
+(1 liked)<https://teams.microsoft.com/l/message/19:517aedd8690146c2b517eeca3700bd72@thread.tacv2/1603978991805?tenantId=dd615949-5bd0-4da0-ac52-28ef8d336373&amp;groupId=e1d488af-65b8-4abe-b991-23bc4c5eca9a&amp;parentMessageId=1603977472380&amp;teamName=CUoL-INM431 Machine Learning - Tutorial Group 1&amp;channelName=Breakout room 8&amp;createdTime=1603978991805>

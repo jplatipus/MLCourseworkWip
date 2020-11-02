@@ -6,7 +6,7 @@ clf
 close all
 
 %% load dataset mat file & configure tree
-load LetterDataset.mat
+load letterDatasetClass.mat
 decisionTree = LetterDecisionTreeClass(letterDataset);
 treeModel = decisionTree.buildTree()
 
@@ -19,8 +19,9 @@ cvTree = crossval(treeModel, 'KFold', 5)
 [validationPredictions, validationScores] = kfoldPredict(cvTree);
 
 % Compute validation accuracy
+[x, y] = letterDataset.extractXYFromTable(letterDataset.trainTable);
 validationAccuracy = 1 - kfoldLoss(cvTree, 'LossFun', 'ClassifError');
-yTrain = categorical(table2cell(letterDataset.yTrain));
+yTrain = categorical(table2cell(y));
 % Plot confusion matrix
 matrix = confusionmat(yTrain, validationPredictions);
 confusionchart(matrix)
