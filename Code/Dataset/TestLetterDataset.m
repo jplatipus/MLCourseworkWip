@@ -27,12 +27,12 @@ disp("=======================");
 summary(letterDataset.trainTable);
 
 %% Display sample's target values distribution to confirm it is equally distributed:
-letterDataset.plotLetterDistribution(letterDataset.trainTable, "Distribution of Classes");
+%letterDataset.plotLetterDistribution(letterDataset.trainTable, "Distribution of Classes");
 %% display correlation of attributes as a heatmap:
 letterDataset.displayCorrelation(letterDataset.trainTable, "Correlation")
 %% Display a grid comparing the attributes by plotting attributes against each other.
-letterDataset.displayScatterMatrix(letterDataset.trainTable, "Scatter Matrix of Attributes");
+%letterDataset.displayScatterMatrix(letterDataset.trainTable, "Scatter Matrix of Attributes");
 %% Display Dataset PCA
-letterDataset.plotPCA(letterDataset.trainTable, "Principle Component Analysis");
+%letterDataset.plotPCA(letterDataset.trainTable, "Principle Component Analysis");
 %% Display parallel coordinates plot of each class, value and feature
-letterDataset.plotParallelCoordinates(letterDataset.trainTable, 'Parallel Coordinates Plot');
+%letterDataset.plotParallelCoordinates(letterDataset.trainTable, 'Parallel Coordinates Plot');

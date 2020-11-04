@@ -5,12 +5,20 @@ clc
 clf
 close all
 
-%% load dataset mat file & configure tree
+%% load letterDataset mat file, create tree class
 load letterDatasetClass.mat
-decisionTree = LetterDecisionTreeClass(letterDataset);
-treeModel = decisionTree.buildTree()
+treeClass = LetterDecisionTreeClass(letterDataset);
+
+%% Test LetterDecisionTreeClass code works
+hyperparameters = DTreeHyperparametersClass.getQuickTestRunInstance();
+treeClass.performDTreeHyperameterAnalysis(hyperparameters);
+
+%% Run complete analysis:
+hyperparameters = DTreeHyperparametersClass.getInstance();
+treeClass.performDTreeHyperameterAnalysis(hyperparameters);
 
 %% display tree
+treeModel = decisionTree.buildSimpleTree()
 decisionTree.displayTree(treeModel)
 
 %% Cross validation loss: 37.44%, or approx 62% accurrate, the paper mentions 80% accuracy.

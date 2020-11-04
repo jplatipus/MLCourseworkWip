@@ -15,4 +15,11 @@ MATLAB for Machine Learning downloaded ebook, there may be more:
 https://uk.mathworks.com/solutions/machine-learning.html
 
 INTRO And this course:https://www.youtube.com/playlist?list=PL60D54836FB8893F0
-(1 liked)<https://teams.microsoft.com/l/message/19:517aedd8690146c2b517eeca3700bd72@thread.tacv2/1603978991805?tenantId=dd615949-5bd0-4da0-ac52-28ef8d336373&amp;groupId=e1d488af-65b8-4abe-b991-23bc4c5eca9a&amp;parentMessageId=1603977472380&amp;teamName=CUoL-INM431 Machine Learning - Tutorial Group 1&amp;channelName=Breakout room 8&amp;createdTime=1603978991805>
+(
+
+accuracy, precision, recall, F1 score, training error, test error, timing, AUC. 
+Could also indicate e.g. best k-fold cross val. model of the method used (with parameter values, kFoldLoss, elapsed time).
+
+If you decide to visualise confusion matrices, it is important and sufficient to present them for testing data (same for ROC curves).
+
+You can also include hyperparameter optimisation graphs in your poster.

@@ -67,11 +67,19 @@ classdef LetterDatasetClass < handle
           [x, ~] = obj.extractXYFromTable(datasetTable);
           figure("Name", plotTitle);
           mat = table2array(x);
-          covariance = corrcoef(mat);       
+          [covariance, pValue] = corrcoef(mat);       
           
           % Use Cell Values 
           [hImage, hText, hXText] = heatmap2(covariance, obj.featureNames,obj.featureNames, ...
             '%0.2f', 'TickAngle', 45, 'Colorbar', true, 'ShowAllTicks', true);
+          title(plotTitle);
+          
+          % print standard deviation of the variables in x
+          uiFigure = figure("Name", plotTitle + ' p-values');
+            
+          [hImage, hText, hXText] = heatmap2(pValue, obj.featureNames,obj.featureNames, ...
+            '%0.2f', 'TickAngle', 45, 'Colorbar', false, 'ShowAllTicks', true, 'Colormap', 'copper');
+          title(plotTitle + ' p-values');
         end
         
         %
@@ -125,9 +133,11 @@ classdef LetterDatasetClass < handle
             [coeff,score,latent,tsquared,explained] = pca(table2array(x));
             disp(explained);
             bar(explained(1:16,:));
+            xticks(1:16)
             xlabel("Components in order of importance");
             ylabel("Percentage variability");
             xtickangle(45);
+            grid on;
             title(plotTitle);
         end;  
         
