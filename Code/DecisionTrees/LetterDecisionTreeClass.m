@@ -2,7 +2,7 @@ classdef LetterDecisionTreeClass < handle
 %%
 % Decision tree class
   properties
-    debug = true;
+    debug = false;
     dataset;
     trainedClassifier;
     validationAccuracy;
@@ -126,8 +126,6 @@ classdef LetterDecisionTreeClass < handle
         % display several prediction results
         %predictionResult(randsample(numel(predictionResult), 5))
         fprintf("Training loss: %0.02f. Test Loss: %0.02f\n", trainingLoss, testLoss);
-        numMisclass = sum(~strcmp(predictionResult,yTest));
-        fprintf("Misclassifications: %d\n", numMisclass);
       end
     end % function
     
