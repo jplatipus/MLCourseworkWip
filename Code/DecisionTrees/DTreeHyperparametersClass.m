@@ -41,7 +41,7 @@ classdef DTreeHyperparametersClass
     %
     function hyperparameters = getQuickTestRunInstance()
       hyperparameters = DTreeHyperparametersClass();
-      hyperparameters.numberOfHoldOutRuns = [1];
+      hyperparameters.numberOfHoldOutRuns = [2, 5];
       hyperparameters.trainValidateProportions = [0.2];
       hyperparameters.maxNumSplits = [100];
       hyperparameters.splitCriteria = ["gdi"];      

@@ -11,11 +11,12 @@ treeClass = LetterDecisionTreeClass(letterDataset);
 
 %% Test LetterDecisionTreeClass code works
 hyperparameters = DTreeHyperparametersClass.getQuickTestRunInstance();
-treeClass.performDTreeHyperameterAnalysis(hyperparameters);
+results = treeClass.performDTreeHyperameterAnalysis(hyperparameters);
+disp(results);
 
 %% Run complete analysis:
 hyperparameters = DTreeHyperparametersClass.getInstance();
-treeClass.performDTreeHyperameterAnalysis(hyperparameters);
+letterDecisionTreeResults = treeClass.performDTreeHyperameterAnalysis(hyperparameters);
 
 %% display tree
 treeModel = decisionTree.buildSimpleTree()
