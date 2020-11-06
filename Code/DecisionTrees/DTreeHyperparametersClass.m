@@ -46,6 +46,30 @@ classdef DTreeHyperparametersClass
       hyperparameters.maxNumSplits = [100];
       hyperparameters.splitCriteria = ["gdi"];      
     end
+    
+    %
+    % Set of hyperparameter values used for the detailed run on the
+    % gdi split criterion.
+    %
+    function hyperparameters = getGdiSplitCriteriaInstance()
+      hyperparameters = DTreeHyperparametersClass();
+      hyperparameters.randomSeed = 112;
+      hyperparameters.numberOfHoldOutRuns = [1 5 10 15 20];
+      hyperparameters.trainValidateProportions = [0.9 0.8, 0.7, 0.5];
+      hyperparameters.maxNumSplits = [75, 50, 25, 10, 5];
+      hyperparameters.splitCriteria = ["gdi"];      
+    end
+    
+    function hyperparameters = getFinalHyperparameterInstance()
+      hyperparameters = DTreeHyperparametersClass();
+      hyperparameters.randomSeed = 112;
+      hyperparameters.numberOfHoldOutRuns = [1];
+      hyperparameters.trainValidateProportions = [0.7];
+      hyperparameters.maxNumSplits = [5];
+      hyperparameters.splitCriteria = ["gdi"];        
+    end
+    
+    
   end % Static
 end
 

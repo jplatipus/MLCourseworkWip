@@ -44,13 +44,13 @@ classdef LetterDecisionTreeClass < handle
     % Good for large datasets: we have a largish one at 16000 examples for 
     % the train/validate, and 16 features.
     %
-    function [letterDecisionTreeResults] = performDTreeHyperameterAnalysis(obj, hyperparameters)
+    function [letterDecisionTreeResults] = performDTreeHyperameterAnalysis(obj, hyperparameters, resultsCsvFilename)
       fprintf("Starting decision tree analysis...\n");
       rng(hyperparameters.randomSeed);
       numExamples = size(obj.dataset.trainTable, 1);  
       % unique set of values that can appear in the predicted results:
       classNames = categorical(table2array(obj.dataset.validClassValues));
-      resultsTable = LetterDecisionTreeResults();
+      resultsTable = LetterDecisionTreeResults(resultsCsvFilename);
       resultsTable.startGatheringResults();
       for trainValidateProportion = hyperparameters.trainValidateProportions
         for maxNumSplit = hyperparameters.maxNumSplits
@@ -124,7 +124,13 @@ classdef LetterDecisionTreeClass < handle
       testLoss = loss(treeModel, xTest, yTest);
       if obj.debug
         % display several prediction results
-        %predictionResult(randsample(numel(predictionResult), 5))
+        numMisclass = sum(~strcmp(predictionResult,yTest));
+        crapTest = table2array(yTest);
+        crapcrapTest = cell2mat(crapTest);
+        MATLAB is really crap whith all these friggin types to represent the same friggin thing,
+        Comparing a letter to another letter is a pain in the butt in matlab.
+        
+        fprintf("Misclassified %d entries out of %d\n", numMisclass, size(yTest, 1));
         fprintf("Training loss: %0.02f. Test Loss: %0.02f\n", trainingLoss, testLoss);
       end
     end % function

@@ -1,4 +1,3 @@
-%
 %% Test the dataset class:
 % loads the dataset and checks the dimensions of the data are
 % as expected.
@@ -17,7 +16,7 @@ assert(trainSize(1) == 16000, "Expected the dataset training to contain 16000 ex
 assert(trainSize(2) == 17, "Expected the dataset training to contain 16 features plus 1 target value");
 assert(testSize(1) == 4000, "Expected the dataset training to contain 16000 examples");
 assert(testSize(2) == 17, "Expected the dataset training to contain 16 features plus 1 target value");
-disp("The dataset appears to be OK.");
+disp("The dataset was successfully created.");
 
 %%
 % Display dataset information
@@ -31,8 +30,8 @@ summary(letterDataset.trainTable);
 %% display correlation of attributes as a heatmap:
 letterDataset.displayCorrelation(letterDataset.trainTable, "Correlation")
 %% Display a grid comparing the attributes by plotting attributes against each other.
-%letterDataset.displayScatterMatrix(letterDataset.trainTable, "Scatter Matrix of Attributes");
+letterDataset.displayScatterMatrix(letterDataset.trainTable, "Scatter Matrix of Attributes");
 %% Display Dataset PCA
-%letterDataset.plotPCA(letterDataset.trainTable, "Principle Component Analysis");
+letterDataset.plotPCA(letterDataset.trainTable, "Principle Component Analysis");
 %% Display parallel coordinates plot of each class, value and feature
-%letterDataset.plotParallelCoordinates(letterDataset.trainTable, 'Parallel Coordinates Plot');
+letterDataset.plotParallelCoordinates(letterDataset.trainTable, 'Parallel Coordinates Plot');

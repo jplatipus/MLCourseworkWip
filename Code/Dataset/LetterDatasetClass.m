@@ -45,6 +45,18 @@ classdef LetterDatasetClass < handle
           % set table column names:
           obj.trainTable.Properties.VariableNames = [obj.targetName, obj.featureNames];
           obj.testTable.Properties.VariableNames = [obj.targetName, obj.featureNames];
+          obj.datasetContentsAsTable.Properties.VariableNames = [obj.targetName, obj.featureNames];
+        end
+        
+        %
+        % Feature selection: removes the given column from the datasetContentsAsTable,
+        % train, test tables and the featureNames.
+        %
+        function removeColumn(obj, columnName)
+          obj.featureNames = obj.featureNames(:,~strcmp(obj.featureNames, columnName));
+          obj.trainTable = removevars(obj.trainTable, columnName);
+          obj.testTable = removevars(obj.testTable, columnName);
+          obj.datasetContentsAsTable = removevars(obj.datasetContentsAsTable, columnName);
         end
         
         %
