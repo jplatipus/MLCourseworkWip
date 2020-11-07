@@ -63,6 +63,7 @@ classdef LetterDecisionTreeClass < handle
               startTime = cputime; 
               trainAccuracies = zeros(1, numberOfHoldOutRun);
               testAccuracies = zeros(1, numberOfHoldOutRun);
+              misclassificationCounts = zeros(1, numberOfHoldOutRun);
               accuracyIndex = 1;
               for holdOutTestRunCount = 1:numberOfHoldOutRun
                 % calculate train and test subset indeces
@@ -75,19 +76,21 @@ classdef LetterDecisionTreeClass < handle
                 yTrain = y(trainSubsetIdx, :);
                 xTest = x(testSubsetIdx, :);
                 yTest = y(testSubsetIdx, :);
-                [trainAccuracy, testAccuracy] = obj.buildAndTestTree(xTrain, ...
+                [trainLoss, testLoss, misclassifiedCount] = obj.buildAndTestTree(xTrain, ...
                                       yTrain, xTest, yTest, ...
                                       splitCriterion, maxNumSplit, classNames);
-                trainAccuracies(accuracyIndex) = trainAccuracy;
-                testAccuracies(accuracyIndex) = testAccuracy;
+                trainAccuracies(accuracyIndex) = 1 - trainLoss;
+                testAccuracies(accuracyIndex) = 1 - testLoss;
+                misclassificationCounts(accuracyIndex) = misclassifiedCount;
                 accuracyIndex = accuracyIndex + 1;
               end
               endTime = cputime;
               avgTrainAccuracy = mean(trainAccuracies);
               avgTestAccuracy = mean(testAccuracies);
+              avgMisclassificationCount = mean(misclassificationCounts);
               resultsTable.appendResult(trainValidateProportion, maxNumSplit, ...
                                        splitCriterion, numberOfHoldOutRun, ...
-                                       avgTrainAccuracy, avgTestAccuracy, endTime - startTime);
+                                       avgTrainAccuracy, avgTestAccuracy, avgMisclassificationCount, size(yTest, 1), endTime - startTime);
             end
           end
         end
@@ -105,7 +108,7 @@ classdef LetterDecisionTreeClass < handle
     %   xTest is passed to predict
     %   yTest are the expected results.
     %
-    function [trainingLoss, testLoss] = buildAndTestTree(obj, xTrain, yTrain, xTest, yTest, splitCriterion, maxNumSplit, classNames)
+    function [trainingLoss, testLoss, misclassifiedCount] = buildAndTestTree(obj, xTrain, yTrain, xTest, yTest, splitCriterion, maxNumSplit, classNames)
       % Grow the decision tree using the training subset
       treeModel = fitctree( ...
           xTrain, ...
@@ -117,22 +120,36 @@ classdef LetterDecisionTreeClass < handle
       % predict
       [predictionResult, nodeNumbers] = predict(treeModel, xTest);
       % errors
-      
-      %numMisclass = sum(~strcmp(predictionResult,yTest))
-      
+      misclassifiedCount = obj.compareCategoricalPredictionToTableExpected( ...
+                              predictionResult, yTest);
       trainingLoss = loss(treeModel, xTrain, yTrain);
       testLoss = loss(treeModel, xTest, yTest);
       if obj.debug
-        % display several prediction results
-        numMisclass = sum(~strcmp(predictionResult,yTest));
-        crapTest = table2array(yTest);
-        crapcrapTest = cell2mat(crapTest);
-        MATLAB is really crap whith all these friggin types to represent the same friggin thing,
-        Comparing a letter to another letter is a pain in the butt in matlab.
-        
-        fprintf("Misclassified %d entries out of %d\n", numMisclass, size(yTest, 1));
+        % display random 5 predictions
+        predictionResult(randsample(numel(predictionResult), 5))
+        percentMisclassified = (misclassifiedCount / size(yTest, 1)) * 100;
+        fprintf("Misclassified %d entries out of %d. %0.04f pct\n", misclassifiedCount, size(yTest, 1), percentMisclassified);
         fprintf("Training loss: %0.02f. Test Loss: %0.02f\n", trainingLoss, testLoss);
       end
+    end % function
+    
+    %
+    % compare a categorical prediction's values to
+    % a table's expected values
+    % returns count of non matching values
+    %
+    function misclassified = compareCategoricalPredictionToTableExpected(obj, categorical, expected)
+      indeces = 1:size(expected, 1);
+      misclassified = 0;
+      for index = indeces
+        c = categorical(index, 1);
+        t = table2array(expected(index, 1));
+        t = t{1};
+        if c ~= t
+          misclassified = misclassified + 1;
+        end
+      end
+        
     end % function
     
   end % methods

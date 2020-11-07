@@ -5,7 +5,7 @@ classdef LetterDecisionTreeResults < handle
   properties
     resultsTable = {};
     resultsColumnNames = ["numberOfHoldOutRun" "trainValidateProportion" ...
-      "maxNumSplit" "splitCriterion" "avgTrainAccuracy" "avgTestAccuracy" "elapsedTime"];
+      "maxNumSplit" "splitCriterion" "avgTrainAccuracy" "avgTestAccuracy" "misclassifiedEntryCount" "entryCount" "elapsedTime"];
         % temporary file to store the results:
     outputResultsFilename = "dtreeResultsFilenameNotSet.csv";
     fileHandle = -1;
@@ -34,18 +34,18 @@ classdef LetterDecisionTreeResults < handle
            end
            % output header
            obj.fileHandle = h;
-           fprintf(obj.fileHandle, "%s\t%s\t%s\t%s\t%s\t%s\t%s\n", obj.resultsColumnNames(:));
+           fprintf(obj.fileHandle, "%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n", obj.resultsColumnNames(:));
     end
     
     function appendResult(obj,trainValidateProportion, maxNumSplit, splitCriterion, ...
-                  numberOfHoldOutRun, avgTrainAccuracy, avgTestAccuracy, elapsedTime)
+                  numberOfHoldOutRun, avgTrainAccuracy, avgTestAccuracy, avgMisclassifiedEntryCount, entryCount, elapsedTime)
       if obj.fileHandle == -1
         exception = MException("LetterDecisionTreeResults:appendResult", "Error output file %s is not open", obj.outputResultsTempFilename);
         throw(exception);
       end
-      fprintf(obj.fileHandle, "%d\t%0.02f\t%d\t%s\t%0.04f\t%0.04f\t%0.04f\n", ...
+      fprintf(obj.fileHandle, "%d\t%0.02f\t%d\t%s\t%0.04f\t%0.04f\t%0.04f\t%d\t%0.04f\n", ...
                numberOfHoldOutRun, trainValidateProportion, ...
-               maxNumSplit, splitCriterion, avgTrainAccuracy, avgTestAccuracy, elapsedTime);
+               maxNumSplit, splitCriterion, avgTrainAccuracy, avgTestAccuracy, avgMisclassifiedEntryCount, entryCount, elapsedTime);
     end
     
     function endGatheringResults(obj)
@@ -54,6 +54,7 @@ classdef LetterDecisionTreeResults < handle
         throw(exception);
       end
       fclose(obj.fileHandle);
+      obj.fileHandle = -1;
       obj.resultsTable = readtable(obj.outputResultsFilename, "Delimiter", "\t");
     end
     
@@ -78,7 +79,9 @@ classdef LetterDecisionTreeResults < handle
         'Color',[0.3010 0.7450 0.9330]);
       
       % Uncomment the following line to preserve the X-limits of the axes
-      % xlim(axes1,[0.3 0.653]);
+      xlim(axes1,[0.0 1.0]);
+      ylim(axes1,[0.0 1.0]);
+      grid on
       xlabel("Avg. Train Accuracy");
       ylabel("Avg. Test Accuracy");
       title(plotTitle);

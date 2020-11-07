@@ -9,17 +9,17 @@ close all
 %
 load letterDatasetClass.mat
 treeAllFeatureClass = LetterDecisionTreeClass(letterDataset);
-
+treeAllFeatureClass.debug = true;
 %% Test LetterDecisionTreeClass code works
 hyperparameters = DTreeHyperparametersClass.getQuickTestRunInstance();
 quickRunResults = treeAllFeatureClass.performDTreeHyperameterAnalysis(hyperparameters, "quickRunResults.csv");
 disp(quickRunResults);
 
-%% Run analysis on all columns, all parameters:
+%% Run analysis on all columns, all parameters (displays debug info):
 hyperparameters = DTreeHyperparametersClass.getInstance();
 treeAllFeatureResults = treeAllFeatureClass.performDTreeHyperameterAnalysis(hyperparameters, "treeAllFeatureResults.csv");
 disp(treeAllFeatureResults);
-% Plot results: gdi split criterion looks more accurate:
+% Plot results: deviance split criterion looks more accurate:
 treeAllFeatureResults.plotCriteriaAccuracy("Accuracy by Split Criteria, all Parameters")
 
 %
@@ -28,23 +28,22 @@ treeAllFeatureResults.plotCriteriaAccuracy("Accuracy by Split Criteria, all Para
 load letterDatasetClass.mat;
 letterDataset.removeColumn("yBox");
 letterDataset.removeColumn("xEgvy");
-letterDataset.removeColumn("xBox");
 hyperparameters = DTreeHyperparametersClass.getInstance();
 treeSelectFeatureClass = LetterDecisionTreeClass(letterDataset);
 treeSelectFeatureResults = treeSelectFeatureClass.performDTreeHyperameterAnalysis(hyperparameters, "treeSelectFeatureResults.csv");
 disp(treeSelectFeatureResults);
-% Plot results: gdi split criterion looks more accurate:
+% Plot results: deviance split criterion looks more accurate:
 treeSelectFeatureResults.plotCriteriaAccuracy("Accuracy by Split Criteria (feature Selected)")
 
 %
-%% Perform analysiss on gdi split criteria
+%% Perform analysiss on deviance split criteria
 %
 load letterDatasetClass.mat;
-gdiHyperparameters = DTreeHyperparametersClass.getGdiSplitCriteriaInstance();
+devianceHyperparameters = DTreeHyperparametersClass.getDevianceSplitCriteriaInstance();
 treeAllFeatureClass = LetterDecisionTreeClass(letterDataset);
-treeGdiSplitResults = treeAllFeatureClass.performDTreeHyperameterAnalysis(gdiHyperparameters, "treeSelectGdiSplitResults.csv");
-disp(treeGdiSplitResults);
-treeGdiSplitResults.plotCriteriaAccuracy("GDI Accuracy Split Criterion")
+treeDevianceSplitResults = treeAllFeatureClass.performDTreeHyperameterAnalysis(devianceHyperparameters, "treeSelectDevianceSplitResults.csv");
+disp(treeDevianceSplitResults);
+treeDevianceSplitResults.plotCriteriaAccuracy("Deviance Accuracy Split Criterion")
 
 %
 %% Perform final test using optimal hyperparameters on complete dataset
