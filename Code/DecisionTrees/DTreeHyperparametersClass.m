@@ -56,7 +56,7 @@ classdef DTreeHyperparametersClass
       hyperparameters.randomSeed = 112;
       hyperparameters.numberOfHoldOutRuns = [1 10 20];
       hyperparameters.trainValidateProportions = [0.8];
-      hyperparameters.maxNumSplits = [75, 100, 125, 150, 200];
+      hyperparameters.maxNumSplits = [75, 100, 125, 150, 200, 225, 250, 300, 350, 400, 500, 600];
       hyperparameters.splitCriteria = ["deviance"];      
     end
     
