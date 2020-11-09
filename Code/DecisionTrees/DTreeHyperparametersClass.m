@@ -10,7 +10,7 @@ classdef DTreeHyperparametersClass
       randomSeed = 110;
       numberOfHoldOutRuns = [1 5 10 15 20];
       trainValidateProportions = [0.8, 0.7];
-      maxNumSplits = [100, 75, 50, 25];
+      maxNumSplits = [25, 100, 400, 800, 1600];
       splitCriteria = ["gdi", "twoing", "deviance"];
       classNames = {};
   end % properties
@@ -56,14 +56,14 @@ classdef DTreeHyperparametersClass
       hyperparameters.randomSeed = 112;
       hyperparameters.numberOfHoldOutRuns = [1 10 20];
       hyperparameters.trainValidateProportions = [0.8];
-      hyperparameters.maxNumSplits = [75, 100, 125, 150, 200, 225, 250, 300, 350, 400, 500, 600];
+      hyperparameters.maxNumSplits = [50, 100, 200, 300, 350, 400, 450, 500, 550, 600, 800, 1000];
       hyperparameters.splitCriteria = ["deviance"];      
     end
     
     function hyperparameters = getFinalHyperparameterInstance()
       hyperparameters = DTreeHyperparametersClass();
       hyperparameters.randomSeed = 250;
-      hyperparameters.maxNumSplits = [400 500 600];
+      hyperparameters.maxNumSplits = [400 425 450 500 525 550 600 700 800 1000];
       hyperparameters.splitCriteria = ["deviance"]; 
       % unused: train and test sets are used on the whole dataset instead:
       hyperparameters.numberOfHoldOutRuns = [-1];

@@ -93,20 +93,21 @@ classdef LetterDecisionTreeResults < handle
       'Position',[0.139097200877803 0.799736733387832 0.190114065664802 0.0999999973009218]);
     end
     
-    function calculateErrors(obj)
-      trainErrorMeasure = log((1 - obj.resultsTable.avgTrainAccuracy).^2).^2;
-      testErrorMeasure = log((1 - obj.resultsTable.avgTestAccuracy).^2).^2;
-      fig = figure("Name", "Accuracy, Result Row comparison");
+    function plotAccuracyTestTrainComparison(obj)
+      % plot the 
+      trainAccuracyMeasure = obj.resultsTable.avgTrainAccuracy%abs(log((1 - obj.resultsTable.avgTrainAccuracy)).^2);
+      testAccuracyMeasure = obj.resultsTable.avgTestAccuracy%abs(log((1 - obj.resultsTable.avgTestAccuracy)).^2);
+      fig = figure("Name", "Accuracy by Result Row comparison");
       ax = axes('Parent',fig);
       hold(ax,'on');
-      xlim(ax,[0 (size(obj.resultsTable, 1) + 1)]);
-      ylim(ax,[0.0 (max(max([trainErrorMeasure, testErrorMeasure])) + 1)]);
+      %xlim(ax,[0 (size(obj.resultsTable, 1) + 1)]);
+      %ylim(ax,[0.0 (max(max([trainErrorMeasure, testErrorMeasure])) + 1)]);
       legend1 = legend(ax,'show');
-      pd = plot(trainErrorMeasure, 'Color',[0.4660 0.6740 0.1880], 'DisplayName','Train','MarkerSize',15,'Marker','.');
-      pd = plot(testErrorMeasure, 'Color',[0.3010 0.7450 0.9330], 'DisplayName','Test','MarkerSize',15,'Marker','.');
+      pd = plot(trainAccuracyMeasure, 'Color',[0.4660 0.6740 0.1880], 'DisplayName','Train','MarkerSize',15,'Marker','.');
+      pd = plot(testAccuracyMeasure, 'Color',[0.3010 0.7450 0.9330], 'DisplayName','Test','MarkerSize',15,'Marker','.');
       xlabel("Result table row No.");
       ylabel("Accuracy measure");
-      title("Accuracy, Result Row comparison");
+      title("Accuracy by Result Row comparison");
     end
     
   end % methods
