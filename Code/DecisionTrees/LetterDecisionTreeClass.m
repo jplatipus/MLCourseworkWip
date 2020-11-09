@@ -100,6 +100,45 @@ classdef LetterDecisionTreeClass < handle
       fprintf("Completed decision tree analysis\n");
     end % function
 
+    %%
+    % Perform final analysis, usimng the previously unseen dataset
+    function [letterDecisionTreeResults] = performFinalDTreeHyperparameterAnalysis(obj, hyperparameters, resultsFinalCsvFilename)
+            fprintf("Starting final decision tree analysis...\n");
+      rng(hyperparameters.randomSeed);
+      % unique set of values that can appear in the predicted results:
+      classNames = categorical(table2array(obj.dataset.validClassValues));
+      resultsTable = LetterDecisionTreeResults(resultsFinalCsvFilename);
+      resultsTable.startGatheringResults();
+      for maxNumSplit = hyperparameters.maxNumSplits
+        for splitCriterion = hyperparameters.splitCriteria
+          for numberOfHoldOutRun = hyperparameters.numberOfHoldOutRuns
+            startTime = cputime; 
+            % create train and test sets from complete dataset
+            % extract train and test sets
+            [x, y] = obj.dataset.extractXYFromTable(obj.dataset.trainTable);
+            xTrain = x;
+            yTrain = y;
+            [x, y] = obj.dataset.extractXYFromTable(obj.dataset.testTable);
+            xTest = x;
+            yTest = y;
+            trainValidateProportion = size(yTrain) / (size(yTrain ) + size(yTest));
+            [trainLoss, testLoss, misclassifiedCount] = obj.buildAndTestTree(xTrain, ...
+                                  yTrain, xTest, yTest, ...
+                                  splitCriterion, maxNumSplit, classNames);
+            trainAccuracy = 1 - trainLoss;
+            testAccuracy = 1 - testLoss;
+            endTime = cputime;
+            resultsTable.appendResult(trainValidateProportion, maxNumSplit, ...
+                                     splitCriterion, 1, ...
+                                     trainAccuracy, testAccuracy, misclassifiedCount, size(yTest, 1), endTime - startTime);
+          end
+        end
+      end
+      resultsTable.endGatheringResults();
+      letterDecisionTreeResults = resultsTable;
+      fprintf("Completed final decision tree analysis\n");
+    end %function
+    
     %
     % Build a decision tree, and test it using the passed parameters 
     % The following parameters are the values passed directly to fitctree:
@@ -149,8 +188,11 @@ classdef LetterDecisionTreeClass < handle
           misclassified = misclassified + 1;
         end
       end
-        
     end % function
+    
+    function performFinalHyperparameterAnalysis(obj)
+      
+    end
     
   end % methods
   

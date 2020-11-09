@@ -62,11 +62,13 @@ classdef DTreeHyperparametersClass
     
     function hyperparameters = getFinalHyperparameterInstance()
       hyperparameters = DTreeHyperparametersClass();
-      hyperparameters.randomSeed = 112;
-      hyperparameters.numberOfHoldOutRuns = [1];
-      hyperparameters.trainValidateProportions = [0.8];
-      hyperparameters.maxNumSplits = [5];
-      hyperparameters.splitCriteria = ["deviance"];        
+      hyperparameters.randomSeed = 250;
+      hyperparameters.maxNumSplits = [400 500 600];
+      hyperparameters.splitCriteria = ["deviance"]; 
+      % unused: train and test sets are used on the whole dataset instead:
+      hyperparameters.numberOfHoldOutRuns = [-1];
+      % unused: train and test sets are used on the whole dataset instead:
+      hyperparameters.trainValidateProportions = [-1];       
     end
     
     

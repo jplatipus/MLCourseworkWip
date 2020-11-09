@@ -44,6 +44,8 @@ treeAllFeatureClass = LetterDecisionTreeClass(letterDataset);
 treeDevianceSplitResults = treeAllFeatureClass.performDTreeHyperameterAnalysis(devianceHyperparameters, "treeSelectDevianceSplitResults.csv");
 disp(treeDevianceSplitResults);
 treeDevianceSplitResults.plotCriteriaAccuracy("Deviance Accuracy Split Criterion")
+%% Plot errors
+treeDevianceSplitResults.calculateErrors()
 
 %
 %% Perform final test using optimal hyperparameters on complete dataset
@@ -52,13 +54,16 @@ load letterDatasetClass.mat;
 finalHyperparameters = DTreeHyperparametersClass.getFinalHyperparameterInstance();
 treeFinalFeatureClass = LetterDecisionTreeClass(letterDataset);
 treeFinalFeatureClass.debug = true;
-treeFinalFeatureResults = treeFinalFeatureClass.performDTreeHyperameterAnalysis(finalHyperparameters, "treeFinalFeatureResults.csv");
+treeFinalFeatureResults = treeFinalFeatureClass.performFinalDTreeHyperparameterAnalysis(finalHyperparameters, "treeFinalFeatureResults.csv");
 disp(treeFinalFeatureResults);
+%% Plot errors
+treeFinalFeatureResults.calculateErrors()
+
+%{
 
 %% display tree
 treeModel = decisionTree.buildSimpleTree()
 decisionTree.displayTree(treeModel)
-
 %% Cross validation loss: 37.44%, or approx 62% accurrate, the paper mentions 80% accuracy.
 cvTree = crossval(treeModel, 'KFold', 5)
 % Compute validation predictions
@@ -71,3 +76,5 @@ yTrain = categorical(table2cell(y));
 % Plot confusion matrix
 matrix = confusionmat(yTrain, validationPredictions);
 confusionchart(matrix)
+
+%}
