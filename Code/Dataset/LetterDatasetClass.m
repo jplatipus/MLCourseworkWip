@@ -18,6 +18,8 @@ classdef LetterDatasetClass < handle
       trainTable = {};
       % random test examples:
       testTable = {};
+      % flag indicating if the dataset has been normalised
+      isNormalised = false;
       
     end % properties
     
@@ -26,11 +28,15 @@ classdef LetterDatasetClass < handle
         % Public
         % Constructor: load dataset, split data into class members (tables)
         %
-        function obj = LetterDatasetClass()
+        function obj = LetterDatasetClass(normalise)
           %Load file: 
           obj.datasetContentsAsTable = readtable(obj.datasetFilePath, 'Delimiter', ',');
           % normalise dataset
-          obj.datasetContentsAsTable = normalize(obj.datasetContentsAsTable, 'norm', Inf, 'DataVariables', @isnumeric);
+          if normalise
+            obj.datasetContentsAsTable = normalize(obj.datasetContentsAsTable, ...
+              'norm', Inf, 'DataVariables', @isnumeric);
+            obj.isNormalised = true;
+          end
           %Extract set of class values
           obj.validClassValues = unique(obj.datasetContentsAsTable(:,1));
           %Split dataset into train and test sets
@@ -70,8 +76,9 @@ classdef LetterDatasetClass < handle
         end
         
         %
-        % Display correlation of training data as a heatmap
-        %
+        % Display correlation of training data as two heatmaps:
+        % - A correlation of the attribute values is displayed
+        % - A correlation of the null hypothesis p-values is displayed
         % make use of heatmap found on Matlab's fileexchange:
         % Ameya Deoras (2020). Customizable Heat Maps (https://www.mathworks.com/matlabcentral/fileexchange/24253-customizable-heat-maps), MATLAB Central File Exchange. Retrieved November 2, 2020.
         %
@@ -134,6 +141,8 @@ classdef LetterDatasetClass < handle
           ylabel('Letter');
           xlabel('Total Entries');
           title(plotTitle);
+          fprintf("Summary of letter distribution:\n");
+          summary(t);
         end
          
         %

@@ -7,7 +7,7 @@ close all
 %% Test LetterDecisionTreeClass code works
 % load letterDataset mat file, create tree class
 load letterDatasetClass.mat
-treeQuickTestClass = LetterDecisionTreeClass(letterDataset);
+treeQuickTestClass = LetterDecisionTreeClass(letterDatasetNormalised);
 % display info during run:
 treeQuickTestClass.debug = true;
 % Test LetterDecisionTreeClass code works using  small set of hyperparameters
@@ -18,60 +18,92 @@ disp(quickRunResults);
 %% Run analysis on all columns, all parameters:
 % load letterDataset mat file, create tree class
 load letterDatasetClass.mat
-treeAllFeaturesClass = LetterDecisionTreeClass(letterDataset);
-treeAllFeaturesClass.debug = true;
-% get an initial set of hyperparameters to try, the results allow a finer
-% selection to be made later
-allFeaturesHyperparameters = DTreeHyperparametersClass.getInstance();
-treeAllFeatureResults = treeAllFeaturesClass.performDTreeHyperameterAnalysis(allFeaturesHyperparameters, "treeAllFeatureResults.csv");
-disp(treeAllFeatureResults);
-%% Plot results: deviance split criterion looks more accurate:
-treeAllFeatureResults.plotCriteriaAccuracy("Accuracy by Split Criteria, all Parameters")
+%% Perform analysis on unnormalised dataset (takes time)
+treeAllFeatureResultsNotNormalised = allFeatureAnalysis(letterDatasetNotNormalised);
+%% Perform analysis on normalised dataset (takes time)
+treeAllFeatureResultsNormalised = allFeatureAnalysis(letterDatasetNormalised);
+%% Display the results of test and train accuracy on normalised and unnormalised 
+% datasets: From this we can see that normalisation has no effect
+displayFeatureResults(treeAllFeatureResultsNotNormalised, "Accuracy by Split Criteria, all Parameters (~normalised)" );
+displayFeatureResults(treeAllFeatureResultsNormalised, "Accuracy by Split Criteria, all Parameters (normalised)");
 
 %
 %% Feature selection try removing features
 % Run the same hyperparameters as in the previous test, this time removing features identified as
 % good candidates for removal during the dataset analysis
 load letterDatasetClass.mat;
-letterDataset.removeColumn("yBox");
-letterDataset.removeColumn("xEgvy");
-selectedFeaturesHyperparameters = DTreeHyperparametersClass.getInstance();
-treeSelectFeatureClass = LetterDecisionTreeClass(letterDataset);
-% display info during run:
-treeSelectFeatureClass.debug = true;
-treeSelectFeatureResults = treeSelectFeatureClass.performDTreeHyperameterAnalysis(selectedFeaturesHyperparameters, "treeSelectFeatureResults.csv");
-disp(treeSelectFeatureResults);
+%% Perform analysis on unnormalised dataset (takes time)
+selectedFeatureResults = selectedFeatureAnalysis(letterDatasetNormalised)
 %% Plot results: deviance split criterion looks more accurate, the time
 % taken is not greatly reduced,the accuracies are slightly reduced when
-% comparing the plot to the previous plot.
-treeSelectFeatureResults.plotCriteriaAccuracy("Accuracy by Split Criteria (feature Selected)")
+% comparing the plot to the plot with all the features.
+displayFeatureResults(selectedFeatureResults, "Accuracy by Split Criteria, selected Parameters (normalised)" );
 
 %
-%% Perform analysiss on deviance split criteria
+%% Perform analysiss on deviance split criterion, as this criterion is consistently the most accurate.
 %
 load letterDatasetClass.mat;
 devianceHyperparameters = DTreeHyperparametersClass.getDevianceSplitCriteriaInstance();
-treeAllFeatureClass = LetterDecisionTreeClass(letterDataset);
+treeAllFeatureClass = LetterDecisionTreeClass(letterDatasetNormalised);
 % display info during run:
 treeAllFeatureClass.debug = true;
 treeDevianceSplitResults = treeAllFeatureClass.performDTreeHyperameterAnalysis(devianceHyperparameters, "treeSelectDevianceSplitResults.csv");
 disp(treeDevianceSplitResults);
 treeDevianceSplitResults.plotCriteriaAccuracy("Deviance Accuracy Split Criterion")
 %% Plot Accuracy comparison
-treeDevianceSplitResults.plotAccuracyTestTrainComparison()
+treeDevianceSplitResults.plotAccuracyTestTrainComparison("Deviance Split Criterion Accuracy by Result Row")
 
 %
 %% Perform final test using optimal hyperparameters on complete dataset
 %
 load letterDatasetClass.mat;
 finalHyperparameters = DTreeHyperparametersClass.getFinalHyperparameterInstance();
-treeFinalFeatureClass = LetterDecisionTreeClass(letterDataset);
+treeFinalFeatureClass = LetterDecisionTreeClass(letterDatasetNormalised);
 % display info during run:
 treeFinalFeatureClass.debug = true;
 treeFinalFeatureResults = treeFinalFeatureClass.performFinalDTreeHyperparameterAnalysis(finalHyperparameters, "treeFinalFeatureResults.csv");
 disp(treeFinalFeatureResults);
 %% Plot Accuracy comparison
-treeFinalFeatureResults.plotAccuracyTestTrainComparison()
+treeFinalFeatureResults.plotAccuracyTestTrainComparison("Final Accuracy by Result Row")
+
+%% Functions defined for the initial tests (allFeatureAnalysis, selectedFeatureAnalysis) 
+% so that they can be run on normalised and unnormalised datasets
+
+%%
+% Perform decision hyperparameter analysis on all features
+function treeAllFeatureResults = allFeatureAnalysis(letterDataset)
+  treeAllFeaturesClass = LetterDecisionTreeClass(letterDataset);
+  treeAllFeaturesClass.debug = true;
+  % get an initial set of hyperparameters to try, the results allow a finer
+  % selection to be made later
+  allFeaturesHyperparameters = DTreeHyperparametersClass.getInstance();
+  treeAllFeatureResults = treeAllFeaturesClass.performDTreeHyperameterAnalysis(allFeaturesHyperparameters, "treeAllFeatureResults.csv");
+end
+
+%% Display test / train accuracy plot (the plot is used to select the 
+% most accurate split criterion)
+function displayFeatureResults(featureResults, plotTitle)
+  normText = "(~normalised)";
+  if plotTitle
+    normText = "(normalised)";
+  end
+  disp(featureResults);
+  %% Plot results: deviance split criterion looks more accurate:
+  featureResults.plotCriteriaAccuracy("Accuracy by Split Criteria, all Parameters " + normText)
+end
+
+%%
+% Perform decision hyperparameter analysis on selected features
+function treeSelectFeatureResults = selectedFeatureAnalysis(letterDataset)
+  letterDataset.removeColumn("yBox");
+  letterDataset.removeColumn("xEgvy");
+  selectedFeaturesHyperparameters = DTreeHyperparametersClass.getInstance();
+  treeSelectFeatureClass = LetterDecisionTreeClass(letterDataset);
+  % display info during run:
+  treeSelectFeatureClass.debug = true;
+  treeSelectFeatureResults = treeSelectFeatureClass.performDTreeHyperameterAnalysis(selectedFeaturesHyperparameters, "treeSelectFeatureResults.csv");
+  disp(treeSelectFeatureResults);
+end
 
 %{
 
