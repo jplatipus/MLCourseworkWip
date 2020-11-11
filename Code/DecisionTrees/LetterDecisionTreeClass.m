@@ -159,8 +159,9 @@ classdef LetterDecisionTreeClass < handle
       % predict
       [predictionResult, nodeNumbers] = predict(treeModel, xTest);
       % errors
-      misclassifiedCount = obj.compareCategoricalPredictionToTableExpected( ...
-                              predictionResult, yTest);
+      misclassifiedCount = sum(predictionResult ~= categorical(table2array(yTest)));
+      %obj.compareCategoricalPredictionToTableExpected( ...
+       %                       predictionResult, yTest);
       trainingLoss = loss(treeModel, xTrain, yTrain);
       testLoss = loss(treeModel, xTest, yTest);
       if obj.debug
@@ -171,28 +172,6 @@ classdef LetterDecisionTreeClass < handle
         fprintf("Training loss: %0.02f. Test Loss: %0.02f\n", trainingLoss, testLoss);
       end
     end % function
-    
-    %
-    % compare a categorical prediction's values to
-    % a table's expected values
-    % returns count of non matching values
-    %
-    function misclassified = compareCategoricalPredictionToTableExpected(obj, categorical, expected)
-      indeces = 1:size(expected, 1);
-      misclassified = 0;
-      for index = indeces
-        c = categorical(index, 1);
-        t = table2array(expected(index, 1));
-        t = t{1};
-        if c ~= t
-          misclassified = misclassified + 1;
-        end
-      end
-    end % function
-    
-    function performFinalHyperparameterAnalysis(obj)
-      
-    end
     
   end % methods
   
