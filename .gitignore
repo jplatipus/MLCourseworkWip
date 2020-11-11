@@ -147,7 +147,5 @@ dmypy.json
 *.pdf
 *.pptx
 
-# Matlab figures & saved objects: should be generated
-*.fig
-*.mat
+# Matlab temporary files
 *.asv
