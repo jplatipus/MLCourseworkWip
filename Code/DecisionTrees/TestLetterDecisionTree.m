@@ -33,7 +33,7 @@ displayFeatureResults(treeAllFeatureResultsNormalised, "Accuracy by Split Criter
 % good candidates for removal during the dataset analysis
 load letterDatasetClass.mat;
 %% Perform analysis on unnormalised dataset (takes time)
-selectedFeatureResults = selectedFeatureAnalysis(letterDatasetNormalised)
+selectedFeatureResults = selectedFeatureAnalysis(letterDatasetNormalised);
 %% Plot results: deviance split criterion looks more accurate, the time
 % taken is not greatly reduced,the accuracies are slightly reduced when
 % comparing the plot to the plot with all the features.
@@ -49,7 +49,7 @@ treeAllFeatureClass = LetterDecisionTreeClass(letterDatasetNormalised);
 treeAllFeatureClass.debug = true;
 treeDevianceSplitResults = treeAllFeatureClass.performDTreeHyperameterAnalysis(devianceHyperparameters, "treeSelectDevianceSplitResults.csv");
 disp(treeDevianceSplitResults);
-treeDevianceSplitResults.plotCriteriaAccuracy("Deviance Accuracy Split Criterion")
+treeDevianceSplitResults.plotCriteriaAccuracy("Deviance Accuracy Split Criterion");
 %% Plot Accuracy comparison
 treeDevianceSplitResults.plotAccuracyTestTrainComparison("Deviance Split Criterion Accuracy by Result Row")
 
@@ -83,13 +83,9 @@ end
 %% Display test / train accuracy plot (the plot is used to select the 
 % most accurate split criterion)
 function displayFeatureResults(featureResults, plotTitle)
-  normText = "(~normalised)";
-  if plotTitle
-    normText = "(normalised)";
-  end
   disp(featureResults);
   %% Plot results: deviance split criterion looks more accurate:
-  featureResults.plotCriteriaAccuracy("Accuracy by Split Criteria, all Parameters " + normText)
+  featureResults.plotCriteriaAccuracy(plotTitle)
 end
 
 %%

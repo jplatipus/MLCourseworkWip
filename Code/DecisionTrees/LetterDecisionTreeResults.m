@@ -93,11 +93,11 @@ classdef LetterDecisionTreeResults < handle
       'Position',[0.139097200877803 0.799736733387832 0.190114065664802 0.0999999973009218]);
     end
     
-    function plotAccuracyTestTrainComparison(obj)
+    function plotAccuracyTestTrainComparison(obj, plotTitle)
       % plot the 
       trainAccuracyMeasure = obj.resultsTable.avgTrainAccuracy%abs(log((1 - obj.resultsTable.avgTrainAccuracy)).^2);
       testAccuracyMeasure = obj.resultsTable.avgTestAccuracy%abs(log((1 - obj.resultsTable.avgTestAccuracy)).^2);
-      fig = figure("Name", "Accuracy by Result Row comparison");
+      fig = figure("Name", plotTitle);
       ax = axes('Parent',fig);
       hold(ax,'on');
       %xlim(ax,[0 (size(obj.resultsTable, 1) + 1)]);
@@ -107,7 +107,7 @@ classdef LetterDecisionTreeResults < handle
       pd = plot(testAccuracyMeasure, 'Color',[0.3010 0.7450 0.9330], 'DisplayName','Test','MarkerSize',15,'Marker','.');
       xlabel("Result table row No.");
       ylabel("Accuracy measure");
-      title("Accuracy by Result Row comparison");
+      title(plotTitle);
     end
     
   end % methods
