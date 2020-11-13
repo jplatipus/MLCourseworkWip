@@ -6,31 +6,79 @@ classdef NBayesClass < handle
     randomSeed = 300;
     debug = true;
     dataset;
-    distNames = {'kernel','mvmn','mvmn','mvmn','mvmn','kernel','mvmn','mvmn','mvmn',...
-    'kernel','mvmn','kernel','kernel','kernel','kernel','mvmn'};
+    nBayesModel;
+    x;
+    y; 
+    xt; 
+    yt;
+    distNamesDefault = {'normal','normal','normal','normal','normal','normal','normal','normal','normal',...
+      'normal','normal','normal','normal','normal','normal','normal'};
+    distNamesKernel = {'kernel','kernel','kernel','kernel','kernel','kernel','kernel','kernel','kernel',...
+      'kernel','kernel','kernel','kernel','kernel','kernel','kernel'};
   end
   
   methods
+    
+    %% Constructor
+    % Several getInstance static convenience methods use this constructor.
+    %
     function obj = NBayesClass(letterDataset)
       obj.dataset = letterDataset;
+      rng(obj.randomSeed);
+      [obj.x, obj.y] = obj.dataset.extractXYFromTable(obj.dataset.trainTable);
+      [obj.xt, obj.yt] = obj.dataset.extractXYFromTable(obj.dataset.testTable);
+    end % constructor
+    
+    function fitModel(obj, distributionNames)
+        obj.nBayesModel = fitcnb(obj.x, obj.y, ...
+        'ClassNames', categorical(table2array(obj.dataset.validClassValues)), ...
+        'DistributionNames', distributionNames);
+    end % method
+    
+    function [trainingLoss, testLoss] = getModelLoss(obj)
+        trainingLoss = loss(obj.nBayesModel, obj.x, obj.y);
+        testLoss = loss(obj.nBayesModel, obj.xt, obj.yt);
     end
     
-    function nBayesModel = simpleNaiveBayesClassifier(obj)
-      rng(obj.randomSeed);
-      [x, y] = obj.dataset.extractXYFromTable(obj.dataset.trainTable);
-      [xt, yt] = obj.dataset.extractXYFromTable(obj.dataset.testTable);
-      nBayesModel = fitcnb(x, y, 'ClassNames', categorical(table2array(obj.dataset.validClassValues)));
-
-      if obj.debug
-        trainingLoss = loss(nBayesModel, x, y);
-        testLoss = loss(nBayesModel, xt, yt);
-        fprintf("Training loss: %0.02f Test loss: %0.02f\n", trainingLoss, testLoss);
-      end
-    end %function
+    function nBayesModel = setPriorDistributionEmpirical(obj)
+      Y = table2array(obj.y);
+      freqDist = cell2table(tabulate(Y));
+      prior = freqDist{:,3};
+      obj.nBayesModel.Prior = prior;
+      nBayesModel = obj.nBayesModel;
+    end
     
-    function nBayesModel = kernelClassifier(obj)
-      
-    end % function
+    function nBayesModel = fitMatlabHyperparameterOptimization(obj)
+      obj.nBayesModel = fitcnb(obj.x, obj.y, ...
+        'ClassNames', categorical(table2array(obj.dataset.validClassValues)), ...
+        'OptimizeHyperparameters','auto',...
+        'HyperparameterOptimizationOptions',struct('AcquisitionFunctionName',...
+        'expected-improvement-plus'))
+      nBayesModel = obj.nBayesModel;
+    end
+
   end %methods
+  
+  %
+  % Static methods
+  %
+  methods(Static)
+
+    function nBayesClassInstance = getDefaultInstance(letterDataset)
+      nBayesClassInstance = NBayesClass(letterDataset);
+      nBayesClassInstance.fitModel(nBayesClassInstance.distNamesDefault);
+    end %function    
+    
+    function nBayesClassInstance = getKernelInstance(letterDataset)
+      nBayesClassInstance = NBayesClass(letterDataset);
+      nBayesClassInstance.fitModel(nBayesClassInstance.distNamesKernel);
+    end %function  
+    
+    function nBayesClassInstance = getCustomInstance(letterDataset, distributionNames)
+      nBayesClassInstance = NBayesClass(letterDataset);
+      nBayesClassInstance.fitModel(nBayesClassInstance.distributionNames);
+    end %function  
+    
+  end % static methods
 end
 
