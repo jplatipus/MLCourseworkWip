@@ -5,4 +5,4 @@ close all
 load letterDatasetClass.mat
 
 nBayes = NBayesClass(letterDatasetNormalised)
-nBayes.simpleNaiveBayesClassifier()
+model = nBayes.simpleNaiveBayesClassifier()
