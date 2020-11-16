@@ -75,6 +75,32 @@ classdef LetterDatasetClass < handle
           y = datasetTable(:,1);
         end
         
+        %% Display Methods
+        %
+
+        %%
+        % Display dataset information
+        function displayDatasetInformation(obj)
+          normText = "(~normalised)";
+          if obj.isNormalised
+            normText = "(normalised)";
+          end
+          disp(obj);
+          disp("Training Table Summary:");
+          disp("=======================");
+          summary(obj.trainTable);
+          %% Display sample's target values distribution to confirm it is equally distributed:
+          obj.plotLetterDistribution(obj.trainTable, "Distribution of Classes " + normText);
+          %% display correlation of attributes as a heatmap:
+          obj.displayCorrelation(obj.trainTable, "Correlation " + normText)
+          %% Display a grid comparing the attributes by plotting attributes against each other.
+          obj.displayScatterMatrix(obj.trainTable, "Scatter Matrix of Attributes " + normText);
+          %% Display Dataset PCA
+          obj.plotPCA(obj.trainTable, "Principle Component Analysis " + normText);
+          %% Display parallel coordinates plot of each class, value and feature
+          obj.plotParallelCoordinates(obj.trainTable, "Parallel Coordinates Plot "  + normText);
+        end %function          
+        
         %
         % Display correlation of training data as two heatmaps:
         % - A correlation of the attribute values is displayed
@@ -88,16 +114,18 @@ classdef LetterDatasetClass < handle
           mat = table2array(x);
           [covariance, pValue] = corrcoef(mat);       
           
+          %% Plot correlation of attributes
           % Use Cell Values 
           [hImage, hText, hXText] = heatmap2(covariance, obj.featureNames,obj.featureNames, ...
             '%0.2f', 'TickAngle', 45, 'Colorbar', true, 'ShowAllTicks', true);
           title(plotTitle);
           
+          %% Plot correlation of p-values
           % print standard deviation of the variables in x
           uiFigure = figure("Name", plotTitle + ' p-values');
             
           [hImage, hText, hXText] = heatmap2(pValue, obj.featureNames,obj.featureNames, ...
-            '%0.2f', 'TickAngle', 45, 'Colorbar', false, 'ShowAllTicks', true, 'Colormap', 'copper');
+            '%0.2f', 'TickAngle', 45, 'Colorbar', false, 'ShowAllTicks', true, 'Colormap', 'copper', "TextColor", 'white');
           title(plotTitle + ' p-values');
         end
         
@@ -154,7 +182,7 @@ classdef LetterDatasetClass < handle
             [coeff,score,latent,tsquared,explained] = pca(table2array(x));
             disp(explained);
             bar(explained(1:16,:));
-            xticks(1:16)
+            xticks(1:16);
             xlabel("Components in order of importance");
             ylabel("Percentage variability");
             xtickangle(45);
