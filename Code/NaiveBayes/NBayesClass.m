@@ -66,19 +66,26 @@ classdef NBayesClass < handle
 
     function nBayesClassInstance = getDefaultInstance(letterDataset)
       nBayesClassInstance = NBayesClass(letterDataset);
+      NBayesClass.alignDistributionNames(nBayesClassInstance);
       nBayesClassInstance.fitModel(nBayesClassInstance.distNamesDefault);
     end %function    
     
     function nBayesClassInstance = getKernelInstance(letterDataset)
       nBayesClassInstance = NBayesClass(letterDataset);
+      NBayesClass.alignDistributionNames(nBayesClassInstance);
       nBayesClassInstance.fitModel(nBayesClassInstance.distNamesKernel);
     end %function  
     
-    function nBayesClassInstance = getCustomInstance(letterDataset, distributionNames)
-      nBayesClassInstance = NBayesClass(letterDataset);
-      nBayesClassInstance.fitModel(nBayesClassInstance.distributionNames);
-    end %function  
-    
+    % Ensures the nBayesClassInstance's distNamesDefault and 
+    % distNamesKernel have the same number of entries as the letterDataset
+    % has attributes
+    function alignDistributionNames(nBayesClassInstance)
+      letterDataset = nBayesClassInstance.dataset;
+      attributeCount = size(letterDataset.trainTable);
+      attributeCount = attributeCount(1,2);
+      nBayesClassInstance.distNamesDefault = nBayesClassInstance.distNamesDefault(:,1:attributeCount - 1);
+      nBayesClassInstance.distNamesKernel = nBayesClassInstance.distNamesKernel(:,1:attributeCount - 1);
+    end
   end % static methods
 end
 
