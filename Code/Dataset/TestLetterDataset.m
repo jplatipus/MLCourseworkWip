@@ -8,9 +8,10 @@ clear
 clc
 clf
 close all
-letterDatasetNotNormalised = LetterDatasetClass(false);
-letterDatasetNormalised = LetterDatasetClass(true);
-letterDatasets = [letterDatasetNotNormalised letterDatasetNormalised];
+letterDatasetNotNormalised = LetterDatasetClass(false, false);
+letterDatasetNormalised = LetterDatasetClass(true, false);
+letterDatasetStandardised = LetterDatasetClass(false, true);
+letterDatasets = [letterDatasetNotNormalised letterDatasetNormalised letterDatasetStandardised];
 
 %% Display dataset analysis for both datasets: plots should be the same for 
 % for both, console outputs min median and max are different for the
@@ -19,6 +20,10 @@ for letterDataset = letterDatasets
   normText = "(~normalised)";
   if letterDataset.isNormalised
     normText = "(normalised)";
+  else 
+    if letterDataset.isStandardised
+      normText = "(standardised)";
+    end
   end
   fprintf("Dataset information %s\n", normText);
   trainSize = size(letterDataset.trainTable);
@@ -29,3 +34,4 @@ for letterDataset = letterDatasets
   assert(testSize(2) == 17, "Expected the dataset training to contain 16 features plus 1 target value");
   disp("The dataset was successfully created.");
   letterDataset.displayDatasetInformation();
+end

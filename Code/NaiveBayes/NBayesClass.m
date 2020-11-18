@@ -5,14 +5,18 @@ classdef NBayesClass < handle
   properties
     randomSeed = 300;
     debug = true;
+    % letter dataset used in this instance:
     dataset;
+    % Matlab Model:
     nBayesModel;
     x;
     y; 
     xt; 
     yt;
+    % distribution names used in the default (normal) distribution
     distNamesDefault = {'normal','normal','normal','normal','normal','normal','normal','normal','normal',...
       'normal','normal','normal','normal','normal','normal','normal'};
+    % distribution names used in the kernel distribution
     distNamesKernel = {'kernel','kernel','kernel','kernel','kernel','kernel','kernel','kernel','kernel',...
       'kernel','kernel','kernel','kernel','kernel','kernel','kernel'};
   end
@@ -29,17 +33,22 @@ classdef NBayesClass < handle
       [obj.xt, obj.yt] = obj.dataset.extractXYFromTable(obj.dataset.testTable);
     end % constructor
     
+    % Fit the model
     function fitModel(obj, distributionNames)
-        obj.nBayesModel = fitcnb(obj.x, obj.y, ...
+        model = fitcnb(obj.x, obj.y, ...
         'ClassNames', categorical(table2array(obj.dataset.validClassValues)), ...
         'DistributionNames', distributionNames);
+      obj.nBayesModel = model;
     end % method
     
+    % calculate the model's training and test loss
     function [trainingLoss, testLoss] = getModelLoss(obj)
         trainingLoss = loss(obj.nBayesModel, obj.x, obj.y);
         testLoss = loss(obj.nBayesModel, obj.xt, obj.yt);
     end
     
+    % Set the Prior distribution to reflect the dataset's
+    % training distribution of classes
     function nBayesModel = setPriorDistributionEmpirical(obj)
       Y = table2array(obj.y);
       freqDist = cell2table(tabulate(Y));
@@ -48,12 +57,13 @@ classdef NBayesClass < handle
       nBayesModel = obj.nBayesModel;
     end
     
+    % Perform matlab's hyperparameter optimization search
     function nBayesModel = fitMatlabHyperparameterOptimization(obj)
       obj.nBayesModel = fitcnb(obj.x, obj.y, ...
         'ClassNames', categorical(table2array(obj.dataset.validClassValues)), ...
         'OptimizeHyperparameters','auto',...
         'HyperparameterOptimizationOptions',struct('AcquisitionFunctionName',...
-        'expected-improvement-plus'))
+        'expected-improvement-plus'));
       nBayesModel = obj.nBayesModel;
     end
 
@@ -64,12 +74,14 @@ classdef NBayesClass < handle
   %
   methods(Static)
 
+    % Get the default class instance for the given dataset
     function nBayesClassInstance = getDefaultInstance(letterDataset)
       nBayesClassInstance = NBayesClass(letterDataset);
       NBayesClass.alignDistributionNames(nBayesClassInstance);
       nBayesClassInstance.fitModel(nBayesClassInstance.distNamesDefault);
     end %function    
     
+    % Get the kernel distribution class instance for the given dataset
     function nBayesClassInstance = getKernelInstance(letterDataset)
       nBayesClassInstance = NBayesClass(letterDataset);
       NBayesClass.alignDistributionNames(nBayesClassInstance);

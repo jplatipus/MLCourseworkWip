@@ -20,6 +20,9 @@ classdef LetterDatasetClass < handle
       testTable = {};
       % flag indicating if the dataset has been normalised
       isNormalised = false;
+      % flag indicating if the dataset has been standardised: 
+      % (Center and scale to have mean 0 and standard deviation 1)
+      isStandardised = false;
       
     end % properties
     
@@ -28,15 +31,22 @@ classdef LetterDatasetClass < handle
         % Public
         % Constructor: load dataset, split data into class members (tables)
         %
-        function obj = LetterDatasetClass(normalise)
+        function obj = LetterDatasetClass(normalised, standardized)
           %Load file: 
           obj.datasetContentsAsTable = readtable(obj.datasetFilePath, 'Delimiter', ',');
           % normalise dataset
-          if normalise
+          if normalised
             obj.datasetContentsAsTable = normalize(obj.datasetContentsAsTable, ...
               'norm', Inf, 'DataVariables', @isnumeric);
             obj.isNormalised = true;
+          else
+            if standardized
+              obj.datasetContentsAsTable = normalize(obj.datasetContentsAsTable, ...
+                'zscore', 'std', 'DataVariables', @isnumeric);
+              obj.isStandardised = true;
+            end
           end
+          
           %Extract set of class values
           obj.validClassValues = unique(obj.datasetContentsAsTable(:,1));
           %Split dataset into train and test sets
@@ -84,6 +94,10 @@ classdef LetterDatasetClass < handle
           normText = "(~normalised)";
           if obj.isNormalised
             normText = "(normalised)";
+          else 
+            if obj.isStandardised
+              normText = "(standardised)";
+            end
           end
           disp(obj);
           disp("Training Table Summary:");
