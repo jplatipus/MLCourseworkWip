@@ -50,7 +50,7 @@ classdef LetterDatasetClass < handle
           %Extract set of class values
           obj.validClassValues = unique(obj.datasetContentsAsTable(:,1));
           %Split dataset into train and test sets
-          rng(obj.randomSeed)
+          rng(obj.randomSeed);
           exampleCount = size(obj.datasetContentsAsTable, 1);
           partition = cvpartition(exampleCount, 'Holdout', obj.testSetProportion);
           idxTrain = training(partition);
@@ -89,7 +89,7 @@ classdef LetterDatasetClass < handle
         %
 
         %%
-        % Display dataset information
+        % Display dataset summary information 
         function displayDatasetInformation(obj)
           normText = "(~normalised)";
           if obj.isNormalised
@@ -102,22 +102,35 @@ classdef LetterDatasetClass < handle
           disp(obj);
           disp("Training Table Summary:");
           disp("=======================");
-          summary(obj.trainTable);
+          summary(obj.trainTable);          
+        end
+        %%
+        % Display plots of the dataset
+        function displayDatasetPlots(obj)
+          normText = "(~normalised)";
+          if obj.isNormalised
+            normText = "(normalised)";
+          else 
+            if obj.isStandardised
+              normText = "(standardised)";
+            end
+          end
+          
           %% Display sample's target values distribution to confirm it is equally distributed:
           obj.plotLetterDistribution(obj.trainTable, "Distribution of Classes " + normText);
           %% display correlation of attributes as a heatmap:
           obj.displayCorrelation(obj.trainTable, "Correlation " + normText)
           %% Display a grid comparing the attributes by plotting attributes against each other.
           obj.displayScatterMatrix(obj.trainTable, "Scatter Matrix of Attributes " + normText);
-          %% Display Dataset PCA
-          obj.plotPCA(obj.trainTable, "Principle Component Analysis " + normText);
           %% Display parallel coordinates plot of each class, value and feature
-          obj.plotParallelCoordinates(obj.trainTable, "Parallel Coordinates Plot "  + normText);
+          obj.plotParallelCoordinates(obj.trainTable, "Parallel Coordinates Plot "  + normText);      
+          %% Display Predictor levels
+          obj.plotPredictorLevels(obj.trainTable, 'Predictor Levels');
         end %function          
         
         %
         % Display correlation of training data as two heatmaps:
-        % - A correlation of the attribute values is displayed
+        % - A Pearson correlation of the attribute values is displayed
         % - A correlation of the null hypothesis p-values is displayed
         % make use of heatmap found on Matlab's fileexchange:
         % Ameya Deoras (2020). Customizable Heat Maps (https://www.mathworks.com/matlabcentral/fileexchange/24253-customizable-heat-maps), MATLAB Central File Exchange. Retrieved November 2, 2020.
@@ -134,13 +147,6 @@ classdef LetterDatasetClass < handle
             '%0.2f', 'TickAngle', 45, 'Colorbar', true, 'ShowAllTicks', true);
           title(plotTitle);
           
-          %% Plot correlation of p-values
-          % print standard deviation of the variables in x
-          uiFigure = figure("Name", plotTitle + ' p-values');
-            
-          [hImage, hText, hXText] = heatmap2(pValue, obj.featureNames,obj.featureNames, ...
-            '%0.2f', 'TickAngle', 45, 'Colorbar', false, 'ShowAllTicks', true, 'Colormap', 'copper', "TextColor", 'white');
-          title(plotTitle + ' p-values');
         end
         
         %
@@ -184,49 +190,30 @@ classdef LetterDatasetClass < handle
           xlabel('Total Entries');
           title(plotTitle);
           fprintf("Summary of letter distribution:\n");
-          summary(t);
+          s = summary(t);
+          fprintf("Minimum examples per class: %d\nMaximum examples per class: %d\nMedian number of examples per class: %0.04f\n", ...
+            s.Count.Min, s.Count.Max, s.Count.Median);
         end
-         
+                
         %
-        % Plot PCA of training data features
+        % Plot levels
         %
-        function plotPCA(obj, datasetTable, plotTitle)
-            [x, y] = obj.extractXYFromTable(datasetTable);
-            figure("Name", "PCA Chart");
-            [coeff,score,latent,tsquared,explained] = pca(table2array(x));
-            disp(explained);
-            bar(explained(1:16,:));
-            xticks(1:16);
-            xlabel("Components in order of importance");
-            ylabel("Percentage variability");
-            xtickangle(45);
-            grid on;
-            title(plotTitle);
-        end;  
-        
-        %
-        % Plot a parallel coordinates plot of the measuements for each
-        % feature in the given dataset (training is used).
-        % The data is normalised then plotted, using a different colour for
-        % each class (letter).
-        % In order to make the plot less busy, only the median (solid
-        % line), 25% quartile (dotted line below its respective solid line) and 
-        % 75% quartile (dotted line above its respective solid line) 
-        % are plotted for each class.
-        %
-        function plotParallelCoordinates(obj, datasetTable, plotTitle)
-          [x, y] = obj.extractXYFromTable(datasetTable);
-          x = table2array(x);
-          y = table2array(y);
-          meanX = mean(x);
-          stdX = std(x);
-          normalisedX = (x - meanX) ./ stdX;
+        function plotPredictorLevels(obj, datasetTable, plotTitle)
+          [X, Y] = obj.extractXYFromTable(datasetTable);
+          countLevels = @(x)numel(categories(categorical(x)));
+          numLevels = varfun(countLevels,X,'OutputFormat','uniform');
+          
           figure('Name', plotTitle);
-          labels = datasetTable.Properties.VariableNames(:,2:end);
-          parallelcoords(normalisedX, 'group', y, 'labels', labels, 'quantile', 0.25);
-          xtickangle(45);
+          bar(numLevels);
+          title('Number of Levels Among Predictors');
+          xlabel('Predictor variable');
+          ylabel('Number of levels');
+          h = gca;
+          h.XTickLabel = obj.featureNames;
+          h.XTickLabelRotation = 45;
+          h.TickLabelInterpreter = 'none';
           title(plotTitle);
-        end;
+        end
         
     end % methods
     

@@ -83,7 +83,7 @@ classdef LetterDecisionTreeClass < handle
                 testAccuracies(accuracyIndex) = 1 - testLoss;
                 misclassificationCounts(accuracyIndex) = misclassifiedCount;
                 accuracyIndex = accuracyIndex + 1;
-              end
+              end % holdOutTestRunCount
               endTime = cputime;
               avgTrainAccuracy = mean(trainAccuracies);
               avgTestAccuracy = mean(testAccuracies);
@@ -91,10 +91,10 @@ classdef LetterDecisionTreeClass < handle
               resultsTable.appendResult(trainValidateProportion, maxNumSplit, ...
                                        splitCriterion, numberOfHoldOutRun, ...
                                        avgTrainAccuracy, avgTestAccuracy, avgMisclassificationCount, size(yTest, 1), endTime - startTime);
-            end
-          end
-        end
-      end
+            end % numberOfHoldOutRun
+          end % splitCriterion
+        end % maxNumSplit
+      end % trainValidateProportion
       resultsTable.endGatheringResults();
       letterDecisionTreeResults = resultsTable;
       fprintf("Completed decision tree analysis\n");

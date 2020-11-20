@@ -55,7 +55,7 @@ classdef NBayesClass < handle
       prior = freqDist{:,3};
       obj.nBayesModel.Prior = prior;
       nBayesModel = obj.nBayesModel;
-    end
+    end % function
     
     % Perform matlab's hyperparameter optimization search
     function nBayesModel = fitMatlabHyperparameterOptimization(obj)
@@ -65,8 +65,70 @@ classdef NBayesClass < handle
         'HyperparameterOptimizationOptions',struct('AcquisitionFunctionName',...
         'expected-improvement-plus'));
       nBayesModel = obj.nBayesModel;
-    end
+    end % function
 
+    function letterNBayesResults = performHyperparameterSearch(obj, hyperparameters, resultsCsvFilename)
+     fprintf("Starting decision tree analysis...\n");
+      rng(hyperparameters.randomSeed);
+      numExamples = size(obj.dataset.trainTable, 1);  
+      % unique set of values that can appear in the predicted results:
+      classNames = categorical(table2array(obj.dataset.validClassValues));
+      resultsTable = LetterNBayesResults(resultsCsvFilename);
+      resultsTable.startGatheringResults();      
+      for numberOfHoldOutRun = hyperparameters.numberOfHoldOutRuns
+        % repeat holdout partition creation, build tree, predict this
+        % number of times to get average:
+        avgTrainAccuracy = 0.0;
+        avgTestAccuracy = 0.0;
+        startTime = cputime; 
+        trainAccuracies = zeros(1, numberOfHoldOutRun);
+        testAccuracies = zeros(1, numberOfHoldOutRun);
+        misclassificationCounts = zeros(1, numberOfHoldOutRun);
+        accuracyIndex = 1;
+        for holdOutTestRunCount = 1:numberOfHoldOutRun
+          for distributionName = hyperparameters.distributionNames
+            for width = hyperparameters.kernelWidths
+              % calculate train and test subset indeces
+              partition = cvpartition(numExamples, 'Holdout', 0.2);
+              trainSubsetIdx = training(partition);
+              testSubsetIdx = test(partition);
+              [x, y] = obj.dataset.extractXYFromTable(obj.dataset.trainTable);
+              % extract train and test subsets
+              xTrain = x(trainSubsetIdx, :);
+              yTrain = y(trainSubsetIdx, :);
+              xTest = x(testSubsetIdx, :);
+              yTest = y(testSubsetIdx, :);
+              [trainLoss, testLoss, misclassifiedCount] = obj.buildAndTestNBayes(xTrain, ...
+                                    yTrain, xTest, yTest, ...
+                                    distributionName, width, classNames);
+              trainAccuracies(accuracyIndex) = 1 - trainLoss;
+              testAccuracies(accuracyIndex) = 1 - testLoss;
+              misclassificationCounts(accuracyIndex) = misclassifiedCount;
+              accuracyIndex = accuracyIndex + 1;
+            end % distributionName
+          end % width
+        end % holdOutTestRunCount
+        endTime = cputime;
+        avgTrainAccuracy = mean(trainAccuracies);
+        avgTestAccuracy = mean(testAccuracies);
+        avgMisclassificationCount = mean(misclassificationCounts);
+        resultsTable.appendResult(trainValidateProportion, maxNumSplit, ...
+                                 splitCriterion, numberOfHoldOutRun, ...
+                                 avgTrainAccuracy, avgTestAccuracy, avgMisclassificationCount, size(yTest, 1), endTime - startTime);
+      end % numberOfHoldOutRun        
+      resultsTable.endGatheringResults();
+      letterNBayesResults = resultsTable;
+      fprintf("Completed NBayes analysis\n");      
+    end % function
+    
+    function [trainLoss, testLoss, misclassifiedCount] = obj.buildAndTestNBayes(xTrain, ...
+                                    yTrain, xTest, yTest, ...
+                                    distributionName, width, classNames)
+        TODO: set width for kernel, not normal distribution
+        fit tree, predict, get loss
+    end % function
+    
+    
   end %methods
   
   %

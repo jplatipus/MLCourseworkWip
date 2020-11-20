@@ -26,15 +26,15 @@ classdef LetterDecisionTreeResults < handle
     % Open temporary file to write results
     % throws exception if error
     function startGatheringResults(obj)
-           [h, msg] = fopen(obj.outputResultsFilename, 'w');
-           if h == -1
-               fprintf("Error opening output file %s\n", msg);
-               exception = MException("LetterDecisionTreeResults:startGatheringResults", "Error opening output file: %s\n", msg);
-               throw(exception);
-           end
-           % output header
-           obj.fileHandle = h;
-           fprintf(obj.fileHandle, "%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n", obj.resultsColumnNames(:));
+       [h, msg] = fopen(obj.outputResultsFilename, 'w');
+       if h == -1
+           fprintf("Error opening output file %s\n", msg);
+           exception = MException("LetterDecisionTreeResults:startGatheringResults", "Error opening output file: %s\n", msg);
+           throw(exception);
+       end
+       % output header
+       obj.fileHandle = h;
+       fprintf(obj.fileHandle, "%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n", obj.resultsColumnNames(:));
     end
     
     function appendResult(obj,trainValidateProportion, maxNumSplit, splitCriterion, ...
