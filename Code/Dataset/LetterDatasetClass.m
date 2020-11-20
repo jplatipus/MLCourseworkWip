@@ -121,9 +121,7 @@ classdef LetterDatasetClass < handle
           %% display correlation of attributes as a heatmap:
           obj.displayCorrelation(obj.trainTable, "Correlation " + normText)
           %% Display a grid comparing the attributes by plotting attributes against each other.
-          obj.displayScatterMatrix(obj.trainTable, "Scatter Matrix of Attributes " + normText);
-          %% Display parallel coordinates plot of each class, value and feature
-          obj.plotParallelCoordinates(obj.trainTable, "Parallel Coordinates Plot "  + normText);      
+          obj.displayScatterMatrix(obj.trainTable, "Scatter Matrix of Attributes " + normText);      
           %% Display Predictor levels
           obj.plotPredictorLevels(obj.trainTable, 'Predictor Levels');
         end %function          
