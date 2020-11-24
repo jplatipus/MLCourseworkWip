@@ -8,22 +8,17 @@ clear
 clc
 clf
 close all
-letterDatasetNotNormalised = LetterDatasetClass(false, false);
-letterDatasetNormalised = LetterDatasetClass(true, false);
-letterDatasetStandardised = LetterDatasetClass(false, true);
-letterDatasets = [letterDatasetNotNormalised letterDatasetNormalised letterDatasetStandardised];
+letterDatasetNotNormalised = LetterDatasetClass(false);
+letterDatasetStandardised = LetterDatasetClass(true);
+letterDatasets = [letterDatasetNotNormalised letterDatasetStandardised];
 
 %% Display dataset analysis for both datasets: plots should be the same for 
 % for both, console outputs min median and max are different for the
 % dataset column values.
 for letterDataset = letterDatasets
   normText = "(~normalised)";
-  if letterDataset.isNormalised
-    normText = "(normalised)";
-  else 
-    if letterDataset.isStandardised
-      normText = "(standardised)";
-    end
+  if letterDataset.isStandardised
+    normText = "(standardised)";
   end
   fprintf("Dataset information %s\n", normText);
   trainSize = size(letterDataset.trainTable);

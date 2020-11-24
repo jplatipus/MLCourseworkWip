@@ -4,14 +4,8 @@ classdef NBayesHyperparameterClass < handle
   
   properties
       randomSeed = 110;
-      % distribution names used in the default (normal) distribution
-      distNamesDefault = {'normal','normal','normal','normal','normal','normal','normal','normal','normal',...
-        'normal','normal','normal','normal','normal','normal','normal'};
-      % distribution names used in the kernel distribution
-      distNamesKernel = {'kernel','kernel','kernel','kernel','kernel','kernel','kernel','kernel','kernel',...
-      'kernel','kernel','kernel','kernel','kernel','kernel','kernel'};
       numberOfHoldOutRuns = [1 5 10 15 20];
-      distributionNames = [distNamesDefault, distNamesKernel];
+      distributionNames = [];
       kernelWidths = [];
   end % properties
   
@@ -22,11 +16,30 @@ classdef NBayesHyperparameterClass < handle
   end % methods
     
   methods(Static)
-    function hyperparameters = getQuickTestHyperparametersInstance()
+    function hyperparameters = getQuickTestHyperparametersInstance(nBayes)
       hyperparameters = NBayesHyperparameterClass();
-      hyperparameters.numberOfHoldOutRuns = [2];
-      hyperparameters.distributionNames = [distNamesDefault];
-      hyperparameters.kernelWidths = [0.25916];
+      hyperparameters.numberOfHoldOutRuns = [1];
+      % rows of distribution names (eg: kernel, kernel, ....)
+      hyperparameters.distributionNames = {[nBayes.distNamesDefault]};
+      % rows of widths to go with distribution names rows. So if a
+      % distribution row is normal, it should be -1 (no width), a number
+      % otherwise
+      hyperparameters.kernelWidths = [-1.0];
+    end
+    
+    function hyperparameters = getDefaultAndKernalTestHyperparametersInstance(nBayes)
+      hyperparameters = NBayesHyperparameterClass();
+      hyperparameters.numberOfHoldOutRuns = [1 2 5];
+      % rows of distribution names (eg: kernel, kernel, ....)
+      hyperparameters.distributionNames = {nBayes.distNamesDefault ...
+                                            nBayes.distNamesKernel ...
+                                            nBayes.distNamesKernel ...
+                                            nBayes.distNamesKernel ...
+                                            nBayes.distNamesKernel};
+      % rows of widths to go with distribution names rows. So if a
+      % distribution row is normal, it should be -1 (no width), a number
+      % otherwise
+      hyperparameters.kernelWidths = [-1.0, 0.10 0.098351 0.0932 0.090];
     end
     
   end % methods(static)

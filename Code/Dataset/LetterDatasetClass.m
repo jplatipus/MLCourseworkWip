@@ -18,8 +18,6 @@ classdef LetterDatasetClass < handle
       trainTable = {};
       % random test examples:
       testTable = {};
-      % flag indicating if the dataset has been normalised
-      isNormalised = false;
       % flag indicating if the dataset has been standardised: 
       % (Center and scale to have mean 0 and standard deviation 1)
       isStandardised = false;
@@ -31,21 +29,9 @@ classdef LetterDatasetClass < handle
         % Public
         % Constructor: load dataset, split data into class members (tables)
         %
-        function obj = LetterDatasetClass(normalised, standardized)
+        function obj = LetterDatasetClass(standardised)
           %Load file: 
           obj.datasetContentsAsTable = readtable(obj.datasetFilePath, 'Delimiter', ',');
-          % normalise dataset
-          if normalised
-            obj.datasetContentsAsTable = normalize(obj.datasetContentsAsTable, ...
-              'norm', Inf, 'DataVariables', @isnumeric);
-            obj.isNormalised = true;
-          else
-            if standardized
-              obj.datasetContentsAsTable = normalize(obj.datasetContentsAsTable, ...
-                'zscore', 'std', 'DataVariables', @isnumeric);
-              obj.isStandardised = true;
-            end
-          end
           
           %Extract set of class values
           obj.validClassValues = unique(obj.datasetContentsAsTable(:,1));
@@ -57,11 +43,14 @@ classdef LetterDatasetClass < handle
           idxTest = test(partition);
           obj.trainTable = obj.datasetContentsAsTable(idxTrain, :);
           obj.testTable = obj.datasetContentsAsTable(idxTest, :);
-         
           % set table column names:
           obj.trainTable.Properties.VariableNames = [obj.targetName, obj.featureNames];
           obj.testTable.Properties.VariableNames = [obj.targetName, obj.featureNames];
           obj.datasetContentsAsTable.Properties.VariableNames = [obj.targetName, obj.featureNames];
+          % normalise using zscore standardization?
+          if standardised
+            obj.performStandardization();
+          end
         end
         
         %
@@ -74,6 +63,33 @@ classdef LetterDatasetClass < handle
           obj.testTable = removevars(obj.testTable, columnName);
           obj.datasetContentsAsTable = removevars(obj.datasetContentsAsTable, columnName);
         end
+        
+        %
+        % Normalizes the dataset trainTable and testTable. The test table
+        % is normalised using the train table so as to avoid leakage into
+        % the test set.
+        % The member isStandardised reflects whether the train table and
+        % test table have been normalised
+        % algorithm used in the normalization is:
+        % - zscore normalization
+        % On exit the members trainTable and testTable have been
+        % standardised
+        function performStandardization(obj)
+          % claculate training mean and std dev
+          trainingMeans = mean(table2array(obj.trainTable(:,2:end)));
+          trainingStdDevs = std(table2array(obj.trainTable(:,2:end)));
+          % standardise training table
+          zvalues = (table2array(obj.trainTable(:,2:end)) - trainingMeans) ./ trainingStdDevs;
+          zTable = obj.trainTable;
+          zTable(:,2:end) = array2table(zvalues);
+          obj.trainTable = zTable;        
+          % standardise test table
+          zvalues = (table2array(obj.testTable(:,2:end)) - trainingMeans) ./ trainingStdDevs;
+          zTable = obj.testTable;
+          zTable(:,2:end) = array2table(zvalues);
+          obj.testTable = zTable;
+          obj.isStandardised = true;
+        end % performNormalization
         
         %
         % extract feature and class values from the table, return as [x, y]
@@ -92,12 +108,8 @@ classdef LetterDatasetClass < handle
         % Display dataset summary information 
         function displayDatasetInformation(obj)
           normText = "(~normalised)";
-          if obj.isNormalised
-            normText = "(normalised)";
-          else 
-            if obj.isStandardised
-              normText = "(standardised)";
-            end
+          if obj.isStandardised
+            normText = "(standardised)";
           end
           disp(obj);
           disp("Training Table Summary:");
@@ -108,14 +120,9 @@ classdef LetterDatasetClass < handle
         % Display plots of the dataset
         function displayDatasetPlots(obj)
           normText = "(~normalised)";
-          if obj.isNormalised
-            normText = "(normalised)";
-          else 
-            if obj.isStandardised
-              normText = "(standardised)";
-            end
+          if obj.isStandardised
+            normText = "(standardised)";
           end
-          
           %% Display sample's target values distribution to confirm it is equally distributed:
           obj.plotLetterDistribution(obj.trainTable, "Distribution of Classes " + normText);
           %% display correlation of attributes as a heatmap:
