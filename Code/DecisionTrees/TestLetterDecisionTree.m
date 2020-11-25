@@ -7,7 +7,7 @@ close all
 %% Test LetterDecisionTreeClass code works
 % load letterDataset mat file, create tree class
 load letterDatasetClass.mat
-treeQuickTestClass = LetterDecisionTreeClass(letterDatasetNormalised);
+treeQuickTestClass = LetterDecisionTreeClass(letterDatasetStandardised);
 % display info during run:
 treeQuickTestClass.debug = true;
 % Test LetterDecisionTreeClass code works using  small set of hyperparameters
@@ -21,11 +21,11 @@ load letterDatasetClass.mat
 %% Perform analysis on unnormalised dataset (takes time)
 treeAllFeatureResultsNotNormalised = allFeatureAnalysis(letterDatasetNotNormalised);
 %% Perform analysis on normalised dataset (takes time)
-treeAllFeatureResultsNormalised = allFeatureAnalysis(letterDatasetNormalised);
-%% Display the results of test and train accuracy on normalised and unnormalised 
+treeAllFeatureResultsNormalised = allFeatureAnalysis(letterDatasetStandardised);
+%% Display the results of test and train Loss on normalised and unnormalised 
 % datasets: From this we can see that normalisation has no effect
-displayFeatureResults(treeAllFeatureResultsNotNormalised, "Accuracy by Split Criteria, all Parameters (~normalised)" );
-displayFeatureResults(treeAllFeatureResultsNormalised, "Accuracy by Split Criteria, all Parameters (normalised)");
+displayFeatureResults(treeAllFeatureResultsNotNormalised, "Loss by Split Criteria, all Parameters (~normalised)" );
+displayFeatureResults(treeAllFeatureResultsNormalised, "Loss by Split Criteria, all Parameters (normalised)");
 
 %
 %% Feature selection try removing features
@@ -33,38 +33,38 @@ displayFeatureResults(treeAllFeatureResultsNormalised, "Accuracy by Split Criter
 % good candidates for removal during the dataset analysis
 load letterDatasetClass.mat;
 %% Perform analysis on unnormalised dataset (takes time)
-selectedFeatureResults = selectedFeatureAnalysis(letterDatasetNormalised);
+selectedFeatureResults = selectedFeatureAnalysis(letterDatasetStandardised);
 %% Plot results: deviance split criterion looks more accurate, the time
-% taken is not greatly reduced,the accuracies are slightly reduced when
+% taken is not greatly reduced,the Losses are slightly increased when
 % comparing the plot to the plot with all the features.
-displayFeatureResults(selectedFeatureResults, "Accuracy by Split Criteria, selected Parameters (normalised)" );
+displayFeatureResults(selectedFeatureResults, "Loss by Split Criteria, selected Parameters (normalised)" );
 
 %
 %% Perform analysiss on deviance split criterion, as this criterion is consistently the most accurate.
 %
 load letterDatasetClass.mat;
 devianceHyperparameters = DTreeHyperparametersClass.getDevianceSplitCriteriaInstance();
-treeAllFeatureClass = LetterDecisionTreeClass(letterDatasetNormalised);
+treeAllFeatureClass = LetterDecisionTreeClass(letterDatasetStandardised);
 % display info during run:
 treeAllFeatureClass.debug = true;
 treeDevianceSplitResults = treeAllFeatureClass.performDTreeHyperameterAnalysis(devianceHyperparameters, "treeSelectDevianceSplitResults.csv");
 disp(treeDevianceSplitResults);
-treeDevianceSplitResults.plotCriteriaAccuracy("Deviance Accuracy Split Criterion");
-%% Plot Accuracy comparison
-treeDevianceSplitResults.plotAccuracyTestTrainComparison("Deviance Split Criterion Accuracy by Result Row")
+treeDevianceSplitResults.plotCriteriaLoss("Deviance Loss Split Criterion");
+%% Plot Loss comparison
+treeDevianceSplitResults.plotLossTestTrainComparison("Deviance Split Criterion Loss by Result Row")
 
 %
 %% Perform final test using optimal hyperparameters on complete dataset
 %
 load letterDatasetClass.mat;
 finalHyperparameters = DTreeHyperparametersClass.getFinalHyperparameterInstance();
-treeFinalFeatureClass = LetterDecisionTreeClass(letterDatasetNormalised);
+treeFinalFeatureClass = LetterDecisionTreeClass(letterDatasetStandardised);
 % display info during run:
 treeFinalFeatureClass.debug = true;
 treeFinalFeatureResults = treeFinalFeatureClass.performFinalDTreeHyperparameterAnalysis(finalHyperparameters, "treeFinalFeatureResults.csv");
 disp(treeFinalFeatureResults);
-%% Plot Accuracy comparison
-treeFinalFeatureResults.plotAccuracyTestTrainComparison("Final Accuracy by Result Row")
+%% Plot Loss comparison
+treeFinalFeatureResults.plotLossTestTrainComparison("Final Loss by Result Row")
 
 %% Functions defined for the initial tests (allFeatureAnalysis, selectedFeatureAnalysis) 
 % so that they can be run on normalised and unnormalised datasets
@@ -80,12 +80,12 @@ function treeAllFeatureResults = allFeatureAnalysis(letterDataset)
   treeAllFeatureResults = treeAllFeaturesClass.performDTreeHyperameterAnalysis(allFeaturesHyperparameters, "treeAllFeatureResults.csv");
 end
 
-%% Display test / train accuracy plot (the plot is used to select the 
+%% Display test / train Loss plot (the plot is used to select the 
 % most accurate split criterion)
 function displayFeatureResults(featureResults, plotTitle)
   disp(featureResults);
   %% Plot results: deviance split criterion looks more accurate:
-  featureResults.plotCriteriaAccuracy(plotTitle)
+  featureResults.plotCriteriaLoss(plotTitle)
 end
 
 %%
@@ -106,14 +106,14 @@ end
 %% display tree
 treeModel = decisionTree.buildSimpleTree()
 decisionTree.displayTree(treeModel)
-%% Cross validation loss: 37.44%, or approx 62% accurrate, the paper mentions 80% accuracy.
+%% Cross validation loss: 37.44%, or approx 62% accurrate, the paper mentions 80% Loss.
 cvTree = crossval(treeModel, 'KFold', 5)
 % Compute validation predictions
 [validationPredictions, validationScores] = kfoldPredict(cvTree);
 
-% Compute validation accuracy
+% Compute validation Loss
 [x, y] = letterDataset.extractXYFromTable(letterDataset.trainTable);
-validationAccuracy = 1 - kfoldLoss(cvTree, 'LossFun', 'ClassifError');
+validationLoss = 1 - kfoldLoss(cvTree, 'LossFun', 'ClassifError');
 yTrain = categorical(table2cell(y));
 % Plot confusion matrix
 matrix = confusionmat(yTrain, validationPredictions);

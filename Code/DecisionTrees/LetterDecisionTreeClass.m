@@ -5,7 +5,7 @@ classdef LetterDecisionTreeClass < handle
     debug = false;
     dataset;
     trainedClassifier;
-    validationAccuracy;
+    validationLoss;
   end
   
   methods
@@ -37,7 +37,7 @@ classdef LetterDecisionTreeClass < handle
     end
     
     function trainSimpleTree(obj)
-      [obj.trainedClassifier, obj.validationAccuracy] = vanillaTrainClassifier(obj.dataset.trainData);
+      [obj.trainedClassifier, obj.validationLoss] = vanillaTrainClassifier(obj.dataset.trainData);
     end
          
     % 
@@ -58,13 +58,13 @@ classdef LetterDecisionTreeClass < handle
             for numberOfHoldOutRun = hyperparameters.numberOfHoldOutRuns
               % repeat holdout partition creation, build tree, predict this
               % number of times to get average:
-              avgTrainAccuracy = 0.0;
-              avgTestAccuracy = 0.0;
+              avgTrainLoss = 0.0;
+              avgTestLoss = 0.0;
               startTime = cputime; 
-              trainAccuracies = zeros(1, numberOfHoldOutRun);
-              testAccuracies = zeros(1, numberOfHoldOutRun);
+              trainLosses = zeros(1, numberOfHoldOutRun);
+              testLosses = zeros(1, numberOfHoldOutRun);
               misclassificationCounts = zeros(1, numberOfHoldOutRun);
-              accuracyIndex = 1;
+              LossIndex = 1;
               for holdOutTestRunCount = 1:numberOfHoldOutRun
                 % calculate train and test subset indeces
                 partition = cvpartition(numExamples, 'Holdout', 1.0 - trainValidateProportion);
@@ -79,18 +79,18 @@ classdef LetterDecisionTreeClass < handle
                 [trainLoss, testLoss, misclassifiedCount] = obj.buildAndTestTree(xTrain, ...
                                       yTrain, xTest, yTest, ...
                                       splitCriterion, maxNumSplit, classNames);
-                trainAccuracies(accuracyIndex) = 1 - trainLoss;
-                testAccuracies(accuracyIndex) = 1 - testLoss;
-                misclassificationCounts(accuracyIndex) = misclassifiedCount;
-                accuracyIndex = accuracyIndex + 1;
+                trainLosses(LossIndex) =trainLoss;
+                testLosses(LossIndex) =testLoss;
+                misclassificationCounts(LossIndex) = misclassifiedCount;
+                LossIndex = LossIndex + 1;
               end % holdOutTestRunCount
               endTime = cputime;
-              avgTrainAccuracy = mean(trainAccuracies);
-              avgTestAccuracy = mean(testAccuracies);
+              avgTrainLoss = mean(trainLosses);
+              avgTestLoss = mean(testLosses);
               avgMisclassificationCount = mean(misclassificationCounts);
               resultsTable.appendResult(trainValidateProportion, maxNumSplit, ...
                                        splitCriterion, numberOfHoldOutRun, ...
-                                       avgTrainAccuracy, avgTestAccuracy, avgMisclassificationCount, size(yTest, 1), endTime - startTime);
+                                       avgTrainLoss, avgTestLoss, avgMisclassificationCount, size(yTest, 1), endTime - startTime);
             end % numberOfHoldOutRun
           end % splitCriterion
         end % maxNumSplit
@@ -125,12 +125,12 @@ classdef LetterDecisionTreeClass < handle
             [trainLoss, testLoss, misclassifiedCount] = obj.buildAndTestTree(xTrain, ...
                                   yTrain, xTest, yTest, ...
                                   splitCriterion, maxNumSplit, classNames);
-            trainAccuracy = 1 - trainLoss;
-            testAccuracy = 1 - testLoss;
+            trainLoss = trainLoss;
+            testLoss = testLoss;
             endTime = cputime;
             resultsTable.appendResult(trainValidateProportion, maxNumSplit, ...
                                      splitCriterion, 1, ...
-                                     trainAccuracy, testAccuracy, misclassifiedCount, size(yTest, 1), endTime - startTime);
+                                     trainLoss, testLoss, misclassifiedCount, size(yTest, 1), endTime - startTime);
           end
         end
       end

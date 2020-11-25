@@ -109,11 +109,9 @@ classdef NBayesClass < handle
             cellsIndex = 1;
             for distributionNameCells = hyperparameters.distributionNames             
               % repeat holdout partition creation, build tree, predict this
-              % number of times to get average:
-              accuracyIndex = 1;
               startTime = cputime; 
-              trainAccuracies = zeros(1, numberOfHoldOutRun);
-              testAccuracies = zeros(1, numberOfHoldOutRun);
+              trainLosses = zeros(1, numberOfHoldOutRun);
+              testLosses = zeros(1, numberOfHoldOutRun);
               misclassificationCounts = zeros(1, numberOfHoldOutRun);  
               meanAccuracy = zeros(1, numberOfHoldOutRun);
               meanPrecision = zeros(1, numberOfHoldOutRun);
@@ -151,30 +149,27 @@ classdef NBayesClass < handle
                     distributionName, model, ...
                     classAccuracy, classPrecision, classRecall, ...
                     classF1] =...
-                    obj.buildAndTestNBayes(xTrain, yTrain, xTest, yTest, ...
+                      obj.buildAndTestNBayes(xTrain, yTrain, xTest, yTest, ...
                                       distributionNameCells, priorDistribution, width, ...
                                       classNames);
-                meanAccuracy(accuracyIndex) = mean(classAccuracy);
-                meanPrecision(accuracyIndex) = mean(classPrecision);
-                meanRecall(accuracyIndex) = mean(classRecall);
-                meanF1(accuracyIndex) = mean(classF1);
-                trainAccuracies(accuracyIndex) = 1 - trainingLoss;
-                testAccuracies(accuracyIndex) = 1 - testLoss;
-                misclassificationCounts(accuracyIndex) = misclassifiedCount;             
-                accuracyIndex = accuracyIndex + 1;
+                meanAccuracy(holdOutTestRunCount) = mean(classAccuracy);
+                meanPrecision(holdOutTestRunCount) = mean(classPrecision);
+                meanRecall(holdOutTestRunCount) = mean(classRecall);
+                meanF1(holdOutTestRunCount) = mean(classF1);
+                trainLosses(holdOutTestRunCount) = 1 - trainingLoss;
+                testLosses(holdOutTestRunCount) = 1 - testLoss;
+                misclassificationCounts(holdOutTestRunCount) = misclassifiedCount;
               end % holdOutTestRunCount
               cellsIndex = cellsIndex + 1;
               endTime = cputime;
-              avgTrainAccuracy = mean(trainAccuracies);
-              avgTestAccuracy = mean(testAccuracies);
-              avgMisclassificationCount = mean(misclassificationCounts);
-              avgAccuracy = mean(numberOfHoldOutRun);
-              avgPrecision = mean(numberOfHoldOutRun);
-              avgRecall = mean(numberOfHoldOutRun);
-              avgF1 = mean(numberOfHoldOutRun);
+              avgTrainLoss = mean(trainLosses);
+              avgTestLoss = mean(testLosses);
+              avgAccuracy = mean(meanAccuracy);
+              avgPrecision = mean(meanPrecision);
+              avgRecall = mean(meanRecall);
+              avgF1 = mean(meanF1);
               resultsTable.appendResult(distributionName, width, numberOfHoldOutRun, ...
-                                 avgTrainAccuracy, avgTestAccuracy, ...
-                                 avgMisclassificationCount, ...
+                                 avgTrainLoss, avgTestLoss, ...
                                  avgAccuracy, avgPrecision, avgRecall, avgF1, ...
                                  size(yTest, 1), ...
                                  endTime - startTime);
@@ -219,7 +214,26 @@ classdef NBayesClass < handle
       misclassifiedCount = sum(predictionResult ~= categorical(table2array(yTest)));
       trainingLoss = loss(model, xTrain, yTrain);
       testLoss = loss(model, xTest, yTest);
-      [cm, order] = confusionmat(categorical(table2array(yTest)), categorical(predictionResult));
+      [classAccuracy, classPrecision, classRecall, ...
+        classF1] = obj.calculateMeasuresFromExpectPredict(yTest, predictionResult);
+      if obj.debug
+        % display random 5 predictions, check loss and misclassified
+        % percent match
+        predictionResult(randsample(numel(predictionResult), 5))
+        percentMisclassified = (misclassifiedCount / size(yTest, 1)) * 100;
+        fprintf("Misclassified %d entries out of %d. %0.04f pct\n", misclassifiedCount, size(yTest, 1), percentMisclassified);
+        fprintf("Training loss: %0.02f. Test Loss: %0.02f\n", trainingLoss, testLoss);
+      end
+      
+    end % function
+    
+    % Calculate accuracy, precision, recall and F1 from expected (table)
+    % and predicted (array)
+    % return arrays of measurements, one entry per class.
+    function [classAccuracy, classPrecision, classRecall, ...
+        classF1] = calculateMeasuresFromExpectPredict(obj, expected, predicted)
+      % get confusion matrix from expected vs predictions
+      [cm, order] = confusionmat(categorical(table2array(expected)), categorical(predicted));
       % pre-allocate vectors of calculations and results (one per class)
       TP = zeros(1, 26);
       FN = zeros(1, 26);
@@ -239,8 +253,9 @@ classdef NBayesClass < handle
         % False Positive = values in the class' row - TP
         FP(classIndex) = sum(cm(:,classIndex))-cm(classIndex,classIndex);
         % True Negative = total number of vales - (TP + FP + FN)
-        TN(classIndex) = sum(cm(:))-(TP(classIndex)+FP(classIndex)+FN(classIndex));  
-        
+        TN(classIndex) = sum(cm(:))-(TP(classIndex)+FP(classIndex)+FN(classIndex)); 
+        % check all values add up to the total number of examples
+        assert(sum(cm(:)) == (TP(classIndex)+FP(classIndex)+FN(classIndex)+TN(classIndex)), "mismatch in positives + negatives and number of examples")
         % Calculate prediction measures:
         classAccuracy(classIndex) = (TP(classIndex) + TN(classIndex))/sum(cm(:));
         classPrecision(classIndex) = TP(classIndex)/(TP(classIndex)+FN(classIndex));
@@ -248,18 +263,7 @@ classdef NBayesClass < handle
         classF1(classIndex) = 2 * (classRecall(classIndex) * classPrecision(classIndex)) ...
                                 / (classRecall(classIndex) + classPrecision(classIndex));      
       end
-      
-      %[acc, gmean, fscore, precision, recall, specificity] = PerfMetrics(cm);
-      if obj.debug
-        % display random 5 predictions
-        predictionResult(randsample(numel(predictionResult), 5))
-        percentMisclassified = (misclassifiedCount / size(yTest, 1)) * 100;
-        fprintf("Misclassified %d entries out of %d. %0.04f pct\n", misclassifiedCount, size(yTest, 1), percentMisclassified);
-        fprintf("Training loss: %0.02f. Test Loss: %0.02f\n", trainingLoss, testLoss);
-      end
-      
-    end % function
-    
+    end
     
   end %methods
   

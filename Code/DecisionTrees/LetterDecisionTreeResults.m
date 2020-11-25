@@ -5,7 +5,7 @@ classdef LetterDecisionTreeResults < handle
   properties
     resultsTable = {};
     resultsColumnNames = ["numberOfHoldOutRun" "trainValidateProportion" ...
-      "maxNumSplit" "splitCriterion" "avgTrainAccuracy" "avgTestAccuracy" "misclassifiedEntryCount" "entryCount" "elapsedTime"];
+      "maxNumSplit" "splitCriterion" "avgTrainLoss" "avgTestLoss" "misclassifiedEntryCount" "entryCount" "elapsedTime"];
         % temporary file to store the results:
     outputResultsFilename = "dtreeResultsFilenameNotSet.csv";
     fileHandle = -1;
@@ -38,14 +38,14 @@ classdef LetterDecisionTreeResults < handle
     end
     
     function appendResult(obj,trainValidateProportion, maxNumSplit, splitCriterion, ...
-                  numberOfHoldOutRun, avgTrainAccuracy, avgTestAccuracy, avgMisclassifiedEntryCount, entryCount, elapsedTime)
+                  numberOfHoldOutRun, avgTrainLoss, avgTestLoss, avgMisclassifiedEntryCount, entryCount, elapsedTime)
       if obj.fileHandle == -1
         exception = MException("LetterDecisionTreeResults:appendResult", "Error output file %s is not open", obj.outputResultsTempFilename);
         throw(exception);
       end
       fprintf(obj.fileHandle, "%d\t%0.02f\t%d\t%s\t%0.04f\t%0.04f\t%0.04f\t%d\t%0.04f\n", ...
                numberOfHoldOutRun, trainValidateProportion, ...
-               maxNumSplit, splitCriterion, avgTrainAccuracy, avgTestAccuracy, avgMisclassifiedEntryCount, entryCount, elapsedTime);
+               maxNumSplit, splitCriterion, avgTrainLoss, avgTestLoss, avgMisclassifiedEntryCount, entryCount, elapsedTime);
     end
     
     function endGatheringResults(obj)
@@ -58,7 +58,7 @@ classdef LetterDecisionTreeResults < handle
       obj.resultsTable = readtable(obj.outputResultsFilename, "Delimiter", "\t");
     end
     
-    function plotCriteriaAccuracy(obj, plotTitle)
+    function plotCriteriaLoss(obj, plotTitle)
       tDeviance = obj.resultsTable(strcmp(obj.resultsTable.splitCriterion, 'deviance'), :);
       tTwoing = obj.resultsTable(strcmp(obj.resultsTable.splitCriterion, 'twoing'), :);
       tGdi = obj.resultsTable(strcmp(obj.resultsTable.splitCriterion, 'gdi'), :);
@@ -68,13 +68,13 @@ classdef LetterDecisionTreeResults < handle
       axes1 = axes('Parent',figure1);
       hold(axes1,'on');
       % Create plot
-      pd = plot(tDeviance.avgTrainAccuracy,tDeviance.avgTestAccuracy,'DisplayName','deviance','MarkerSize',25,'Marker','.',...
+      pd = plot(tDeviance.avgTrainLoss,tDeviance.avgTestLoss,'DisplayName','deviance','MarkerSize',25,'Marker','.',...
         'LineStyle','none',...
         'Color',[0.9290 0.6940 0.1250]);
-      pt = plot(tTwoing.avgTrainAccuracy,tTwoing.avgTestAccuracy,'DisplayName','twoing','MarkerSize',15,'Marker','.',...
+      pt = plot(tTwoing.avgTrainLoss,tTwoing.avgTestLoss,'DisplayName','twoing','MarkerSize',15,'Marker','.',...
         'LineStyle','none',...
         'Color',[0.4660 0.6740 0.1880]);
-      pg = plot(tGdi.avgTrainAccuracy,tGdi.avgTestAccuracy,'DisplayName','gdi','MarkerSize',10,'Marker','.',...
+      pg = plot(tGdi.avgTrainLoss,tGdi.avgTestLoss,'DisplayName','gdi','MarkerSize',10,'Marker','.',...
         'LineStyle','none',...
         'Color',[0.3010 0.7450 0.9330]);
       
@@ -82,8 +82,8 @@ classdef LetterDecisionTreeResults < handle
       xlim(axes1,[0.0 1.0]);
       ylim(axes1,[0.0 1.0]);
       grid on
-      xlabel("Avg. Train Accuracy");
-      ylabel("Avg. Test Accuracy");
+      xlabel("Avg. Train Loss");
+      ylabel("Avg. Test Loss");
       title(plotTitle);
       box(axes1,'on');
       hold(axes1,'off');
@@ -93,20 +93,20 @@ classdef LetterDecisionTreeResults < handle
       'Position',[0.139097200877803 0.799736733387832 0.190114065664802 0.0999999973009218]);
     end
     
-    function plotAccuracyTestTrainComparison(obj, plotTitle)
+    function plotLossTestTrainComparison(obj, plotTitle)
       % plot the 
-      trainAccuracyMeasure = obj.resultsTable.avgTrainAccuracy%abs(log((1 - obj.resultsTable.avgTrainAccuracy)).^2);
-      testAccuracyMeasure = obj.resultsTable.avgTestAccuracy%abs(log((1 - obj.resultsTable.avgTestAccuracy)).^2);
+      trainLossMeasure = obj.resultsTable.avgTrainLoss;
+      testLossMeasure = obj.resultsTable.avgTestLoss;
       fig = figure("Name", plotTitle);
       ax = axes('Parent',fig);
       hold(ax,'on');
       %xlim(ax,[0 (size(obj.resultsTable, 1) + 1)]);
       %ylim(ax,[0.0 (max(max([trainErrorMeasure, testErrorMeasure])) + 1)]);
       legend1 = legend(ax,'show');
-      pd = plot(trainAccuracyMeasure, 'Color',[0.4660 0.6740 0.1880], 'DisplayName','Train','MarkerSize',15,'Marker','.');
-      pd = plot(testAccuracyMeasure, 'Color',[0.3010 0.7450 0.9330], 'DisplayName','Test','MarkerSize',15,'Marker','.');
+      pd = plot(trainLossMeasure, 'Color',[0.4660 0.6740 0.1880], 'DisplayName','Train','MarkerSize',15,'Marker','.');
+      pd = plot(testLossMeasure, 'Color',[0.3010 0.7450 0.9330], 'DisplayName','Test','MarkerSize',15,'Marker','.');
       xlabel("Result table row No.");
-      ylabel("Accuracy measure");
+      ylabel("Loss measure");
       title(plotTitle);
     end
     
