@@ -23,6 +23,21 @@ classdef NBayesClass < handle
     % distribution names used in the kernel distribution
     distNamesKernel = {'kernel','kernel','kernel','kernel','kernel','kernel','kernel','kernel','kernel',...
       'kernel','kernel','kernel','kernel','kernel','kernel','kernel'};
+    smoothBox = {'box', 'box', 'box', 'box', 'box', 'box', 'box', 'box', 'box', ...
+      'box', 'box', 'box', 'box', 'box', 'box', 'box'};
+    smoothEpanechnikov = { 'epanechnikov', 'epanechnikov', 'epanechnikov', ...
+      'epanechnikov', 'epanechnikov', 'epanechnikov', 'epanechnikov', ...
+      'epanechnikov', 'epanechnikov', 'epanechnikov', 'epanechnikov', ...
+      'epanechnikov', 'epanechnikov', 'epanechnikov', 'epanechnikov', 'epanechnikov'};
+    smootNormal = { 'normal', 'normal', 'normal', 'normal', 'normal', ...
+      'normal', 'normal', 'normal', 'normal', 'normal', 'normal', 'normal', ...
+      'normal', 'normal', 'normal', 'normal'};
+    smoothTriangle = {'triangle', 'triangle', 'triangle', 'triangle', 'triangle',...
+      'triangle', 'triangle', 'triangle', 'triangle', 'triangle', 'triangle', ...
+      'triangle', 'triangle', 'triangle', 'triangle', 'triangle'};
+    smoothUnsused = {'N/A', 'N/A', 'N/A', 'N/A', 'N/A',...
+      'N/A', 'N/A', 'N/A', 'N/A', 'N/A', 'N/A', ...
+      'N/A', 'N/A', 'N/A', 'N/A', 'N/A'};
   end
   
   methods
@@ -92,7 +107,7 @@ classdef NBayesClass < handle
     % results as a results class instance.
     %
     function letterNBayesResults = performHyperparameterSearch(obj, hyperparameters, resultsCsvFilename)
-     fprintf("Starting decision tree analysis...\n");
+      fprintf("Starting decision tree analysis...\n");
       rng(hyperparameters.randomSeed);
       numExamples = size(obj.dataset.trainTable, 1);  
       % unique set of values that can appear in the predicted results:
@@ -104,10 +119,10 @@ classdef NBayesClass < handle
       % (based on the training set distribution):
       priorDistributions = obj.getPriorDistributionEmpirical(); %, ...
                       % obj.getPriorDistributionNormal()];
-      for numberOfHoldOutRun = hyperparameters.numberOfHoldOutRuns       
-        for priorDistribution = priorDistributions
-            cellsIndex = 1;
-            for distributionNameCells = hyperparameters.distributionNames             
+      cellsIndex = 1;
+      for distributionNameCells = hyperparameters.distributionNames 
+        for numberOfHoldOutRun = hyperparameters.numberOfHoldOutRuns       
+          for priorDistribution = priorDistributions
               % repeat holdout partition creation, build tree, predict this
               startTime = cputime; 
               trainLosses = zeros(1, numberOfHoldOutRun);
@@ -120,6 +135,8 @@ classdef NBayesClass < handle
               for holdOutTestRunCount = 1:numberOfHoldOutRun
                 % get width row matching distributionNames row
                 width = hyperparameters.kernelWidths(cellsIndex);
+                % get smoother type matching distribution names row
+                smootherType = hyperparameters.kernelSmoother(cellsIndex);
                 % calculate train and test subset indeces
                 partition = cvpartition(numExamples, 'Holdout', 0.2);
                 trainSubsetIdx = training(partition);
@@ -134,7 +151,11 @@ classdef NBayesClass < handle
                 if obj.debug
                   fprintf("Test run HoldRunCount: %d of %d,", holdOutTestRunCount,numberOfHoldOutRun);
                   fprintf("Width: %0.04f ",width);
-                  fprintf("DistName: ");
+                  fprintf("\n\tSmoother Type: ");
+                  for str = string(smootherType{1,1})
+                    fprintf("%s ", str);
+                  end
+                  fprintf("\n\tDistName: ");
                   for str = string(distributionNameCells{1,1})
                     fprintf("'%s' ", str);
                   end
@@ -144,23 +165,22 @@ classdef NBayesClass < handle
                   end
                   fprintf('\n');
                 end
-                obj.debug = false;
+                %obj.debug = false;
                 [trainingLoss, testLoss, misclassifiedCount, ...
-                    distributionName, model, ...
-                    classAccuracy, classPrecision, classRecall, ...
-                    classF1] =...
-                      obj.buildAndTestNBayes(xTrain, yTrain, xTest, yTest, ...
-                                      distributionNameCells, priorDistribution, width, ...
-                                      classNames);
-                meanAccuracy(holdOutTestRunCount) = mean(classAccuracy);
-                meanPrecision(holdOutTestRunCount) = mean(classPrecision);
-                meanRecall(holdOutTestRunCount) = mean(classRecall);
-                meanF1(holdOutTestRunCount) = mean(classF1);
-                trainLosses(holdOutTestRunCount) = 1 - trainingLoss;
-                testLosses(holdOutTestRunCount) = 1 - testLoss;
+                    distributionName, smootherTypeName, model, ...
+                    accuracy, precision, recall, ...
+                    f1] =...
+                  obj.buildAndTestNBayes(xTrain, yTrain, xTest, yTest, ...
+                    distributionNameCells, smootherType, priorDistribution, width, ...
+                    classNames);
+                meanAccuracy(holdOutTestRunCount) = accuracy;
+                meanPrecision(holdOutTestRunCount) = precision;
+                meanRecall(holdOutTestRunCount) = recall;
+                meanF1(holdOutTestRunCount) = f1;
+                trainLosses(holdOutTestRunCount) = trainingLoss;
+                testLosses(holdOutTestRunCount) = testLoss;
                 misclassificationCounts(holdOutTestRunCount) = misclassifiedCount;
               end % holdOutTestRunCount
-              cellsIndex = cellsIndex + 1;
               endTime = cputime;
               avgTrainLoss = mean(trainLosses);
               avgTestLoss = mean(testLosses);
@@ -168,14 +188,16 @@ classdef NBayesClass < handle
               avgPrecision = mean(meanPrecision);
               avgRecall = mean(meanRecall);
               avgF1 = mean(meanF1);
-              resultsTable.appendResult(distributionName, width, numberOfHoldOutRun, ...
+              resultsTable.appendResult(distributionName, smootherTypeName, width, numberOfHoldOutRun, ...
                                  avgTrainLoss, avgTestLoss, ...
                                  avgAccuracy, avgPrecision, avgRecall, avgF1, ...
                                  size(yTest, 1), ...
                                  endTime - startTime);
-            end % distributionName    
-        end % priorDistribution
-      end % numberOfHoldOutRun        
+             
+          end % priorDistribution
+        end % numberOfHoldOutRun  
+        cellsIndex = cellsIndex + 1;
+      end % distributionName   
       resultsTable.endGatheringResults();
       letterNBayesResults = resultsTable;
       fprintf("Completed NBayes analysis\n");      
@@ -189,80 +211,77 @@ classdef NBayesClass < handle
     %    classAccuracy, classPrecision, classRecall, ...
     %    classF1, classLabel
     function [trainingLoss, testLoss, misclassifiedCount, ...
-        distributionName, model, ...
-        classAccuracy, classPrecision, classRecall, ...
-        classF1] = buildAndTestNBayes(obj, xTrain, ...
+        distributionName, smootherTypeName,model, ...
+        accuracy, precision, recall, ...
+        f1] = buildAndTestNBayes(obj, xTrain, ...
                                     yTrain, xTest, yTest, ...
-                                    distributionNames, priorDistribution, width, classNames)
+                                    distributionNames, smootherTypes, priorDistribution, width, classNames)
       % train naive bayes model
       model = [];
       if width >= 0.0
         model = fitcnb(xTrain, yTrain, ...
           'ClassNames', classNames, 'DistributionNames', string(distributionNames{:,:}), ...
-          'Prior', priorDistribution, 'width', width);
+          'Prior', priorDistribution, 'kernel', string(smootherTypes{:,:}), 'width', width);
         distributionName = 'kernel';
+        cellConverter = smootherTypes{1,1};
+        smootherTypeName = cellConverter{1,1};
       else
         model = fitcnb(xTrain, yTrain, ...
           'ClassNames', classNames, 'DistributionNames', string(distributionNames{:,:}), ...
           'Prior', priorDistribution);
         distributionName = 'normal';
+        smootherTypeName = 'unused';
       end
       
       % predict using given xTest
-      [predictionResult, score] = predict(model, xTest);
+      [predictionResult, ~] = predict(model, xTest);
       % errors
       misclassifiedCount = sum(predictionResult ~= categorical(table2array(yTest)));
       trainingLoss = loss(model, xTrain, yTrain);
       testLoss = loss(model, xTest, yTest);
-      [classAccuracy, classPrecision, classRecall, ...
-        classF1] = obj.calculateMeasuresFromExpectPredict(yTest, predictionResult);
+      [accuracy, precision, recall, ...
+        f1] = obj.calculateMeasuresFromExpectPredict(yTest, predictionResult);
       if obj.debug
         % display random 5 predictions, check loss and misclassified
         % percent match
-        predictionResult(randsample(numel(predictionResult), 5))
+        %predictionResult(randsample(numel(predictionResult), 5))
         percentMisclassified = (misclassifiedCount / size(yTest, 1)) * 100;
         fprintf("Misclassified %d entries out of %d. %0.04f pct\n", misclassifiedCount, size(yTest, 1), percentMisclassified);
-        fprintf("Training loss: %0.02f. Test Loss: %0.02f\n", trainingLoss, testLoss);
-      end
-      
+        fprintf("\tTraining loss: %0.02f. Test Loss: %0.02f\n", trainingLoss, testLoss);
+        fprintf("\tPrecision: %0.04f Recall: %0.04f Accuracy: %0.04f F1: %0.04f\n", ...
+                 precision, recall, accuracy, f1);      
+      end % debug
     end % function
     
     % Calculate accuracy, precision, recall and F1 from expected (table)
     % and predicted (array)
-    % return arrays of measurements, one entry per class.
-    function [classAccuracy, classPrecision, classRecall, ...
-        classF1] = calculateMeasuresFromExpectPredict(obj, expected, predicted)
+    % return measurements.
+    function [accuracy, precision, recall, f1] = calculateMeasuresFromExpectPredict(obj, expected, predicted)
       % get confusion matrix from expected vs predictions
       [cm, order] = confusionmat(categorical(table2array(expected)), categorical(predicted));
       % pre-allocate vectors of calculations and results (one per class)
       TP = zeros(1, 26);
-      FN = zeros(1, 26);
-      FP = zeros(1, 26);
-      TN = zeros(1, 26);
-      classAccuracy = zeros(1, 26);
       classPrecision = zeros(1, 26);
       classRecall = zeros(1, 26);
-      classF1 = zeros(1, 26);
-      
+      % calculate each class' precision and recall
       for classIndex = 1:size(order)
-        %Calculate true/false positives/negatives:
+        % TP: number of actual positives predicted as positive
         % True positives = value in the diagonal
-        TP(classIndex) = cm(classIndex, classIndex);
-        % False Negative = values in the class' column - TP
-        FN(classIndex) = sum(cm(classIndex,:))-cm(classIndex, classIndex);
-        % False Positive = values in the class' row - TP
-        FP(classIndex) = sum(cm(:,classIndex))-cm(classIndex,classIndex);
-        % True Negative = total number of vales - (TP + FP + FN)
-        TN(classIndex) = sum(cm(:))-(TP(classIndex)+FP(classIndex)+FN(classIndex)); 
-        % check all values add up to the total number of examples
-        assert(sum(cm(:)) == (TP(classIndex)+FP(classIndex)+FN(classIndex)+TN(classIndex)), "mismatch in positives + negatives and number of examples")
-        % Calculate prediction measures:
-        classAccuracy(classIndex) = (TP(classIndex) + TN(classIndex))/sum(cm(:));
-        classPrecision(classIndex) = TP(classIndex)/(TP(classIndex)+FN(classIndex));
-        classRecall(classIndex) = TP(classIndex)/(TP(classIndex)/FN(classIndex));
-        classF1(classIndex) = 2 * (classRecall(classIndex) * classPrecision(classIndex)) ...
-                                / (classRecall(classIndex) + classPrecision(classIndex));      
+        TP(classIndex) = cm(classIndex, classIndex);         
+        % precision: proportion of predicted positives that are actual positive 
+        % TP/(TP+FP): TP/sum of class' row
+        classPrecision(classIndex) = TP(classIndex) / sum(cm(classIndex, :));
+        % recall: proportion of actual positives are predicted as positive:
+        % TP/(TP+FN): TP/sum of class' column
+        classRecall(classIndex) = TP(classIndex) / sum(cm(:, classIndex));
       end
+      % get overall mean for precision and recall
+      precision = mean(classPrecision);
+      recall = mean(classRecall);
+      % accuracy: sum of correctly predicted (diagonal) / sum of all
+      % entries
+      accuracy = sum(sum(eye(26) .* cm)) / sum(cm(:));
+      f1 = 2 * (precision * recall) / (precision + recall);
     end
     
   end %methods
@@ -301,6 +320,10 @@ classdef NBayesClass < handle
       attributeCount = attributeCount(1,2);
       nBayesClassInstance.distNamesDefault = nBayesClassInstance.distNamesDefault(:,1:attributeCount - 1);
       nBayesClassInstance.distNamesKernel = nBayesClassInstance.distNamesKernel(:,1:attributeCount - 1);
+      nBayesClassInstance.smoothBox = nBayesClassInstance.smoothBox(:,1:attributeCount - 1);
+      nBayesClassInstance.smoothEpanechnikov = nBayesClassInstance.smoothEpanechnikov(:,1:attributeCount - 1);
+      nBayesClassInstance.smootNormal = nBayesClassInstance.smootNormal(:,1:attributeCount - 1);
+      nBayesClassInstance.smoothTriangle = nBayesClassInstance.smoothTriangle(:,1:attributeCount - 1);
     end
   end % static methods
 end
