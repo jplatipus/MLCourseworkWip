@@ -1,5 +1,0 @@
-distributionName	smootherType	Width	numberOfHoldOutRun	avgTrainLoss	avgTestLoss	avgAccuracy	avgPrecision	avgRecall	avgF1	entryCount	elapsedTime
-normal	unused	-1.0000	1	0.3436	0.3397	0.6569	0.6591	0.6690	0.6640	3200	1.2656
-normal	unused	-1.0000	2	0.3424	0.3435	0.6556	0.6558	0.6651	0.6604	3200	2.5469
-normal	unused	-1.0000	5	0.3457	0.3449	0.6570	0.6542	0.6645	0.6593	3200	6.0625
-normal	unused	-1.0000	10	0.3448	0.3498	0.6500	0.6494	0.6613	0.6553	3200	9.2813
