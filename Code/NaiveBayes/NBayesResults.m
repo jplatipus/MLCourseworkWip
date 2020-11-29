@@ -44,7 +44,7 @@ classdef NBayesResults < handle
         exception = MException("LetterDecisionTreeResults:appendResult", "Error output file %s is not open", obj.outputResultsTempFilename);
         throw(exception);
       end
-      fprintf(obj.fileHandle, "%s\t%s\t%0.04f\t%d\t%0.04f\t%0.04f\t%0.04f\t%0.04f\t%0.04f\t%0.04f\t%d\t%0.04f\n", ...
+      fprintf(obj.fileHandle, "%s\t%s\t%0.08f\t%d\t%0.04f\t%0.04f\t%0.04f\t%0.04f\t%0.04f\t%0.04f\t%d\t%0.04f\n", ...
                distributionName, smootherTypeName, width, ... 
                numberOfHoldOutRun, ...
                avgTrainLoss, avgTestLoss, ...
@@ -71,7 +71,7 @@ classdef NBayesResults < handle
       ax = axes('Parent',fig);
       hold(ax,'on');
       %xlim(ax,[0 (size(obj.resultsTable, 1) + 1)]);
-      %ylim(ax,[0.0 (max(max([trainErrorMeasure, testErrorMeasure])) + 1)]);
+      ylim(ax,[0.0 1.0]);
       legend1 = legend(ax,'show');
       pd = plot(trainLossMeasure, 'Color',[0.4660 0.6740 0.1880], 'DisplayName','Train','MarkerSize',15,'Marker','.');
       pd = plot(testLossMeasure, 'Color',[0.3010 0.7450 0.9330], 'DisplayName','Test','MarkerSize',15,'Marker','.');
