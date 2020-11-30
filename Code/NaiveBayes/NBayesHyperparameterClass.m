@@ -28,6 +28,22 @@ classdef NBayesHyperparameterClass < handle
       hyperparameters.kernelWidths = [-1.0];
     end
     
+    function hyperparameters = getKernalNormalQuickHyperparametersInstance(nBayes)
+      hyperparameters = NBayesHyperparameterClass();
+      hyperparameters.numberOfHoldOutRuns = [1];
+      % rows of distribution names (eg: kernel, kernel, ....) one per
+      % width, smoother type
+      hyperparameters.distributionNames = { nBayes.distNamesKernel, ...
+                                            nBayes.distNamesKernel, ...
+                                            nBayes.distNamesKernel};
+      hyperparameters.kernelSmoother = {nBayes.smoothNormal, nBayes.smoothNormal, ...
+        nBayes.smoothNormal};                                    ;
+      % rows of widths to go with distribution names rows. So if a
+      % distribution row is normal, it should be -1 (no width), a number
+      % otherwise
+      hyperparameters.kernelWidths = [0.20 0.18 0.13];
+    end
+    
     function hyperparameters = getKernalBoxSmootherHyperparametersInstance(nBayes)
       hyperparameters = NBayesHyperparameterClass();
       hyperparameters.numberOfHoldOutRuns = [1 2 5];

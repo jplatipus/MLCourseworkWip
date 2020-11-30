@@ -58,12 +58,13 @@ classdef LetterDecisionTreeClass < handle
             for numberOfHoldOutRun = hyperparameters.numberOfHoldOutRuns
               % repeat holdout partition creation, build tree, predict this
               % number of times to get average:
-              avgTrainLoss = 0.0;
-              avgTestLoss = 0.0;
               startTime = cputime; 
               trainLosses = zeros(1, numberOfHoldOutRun);
               testLosses = zeros(1, numberOfHoldOutRun);
-              misclassificationCounts = zeros(1, numberOfHoldOutRun);
+              accuracies = zeros(1, numberOfHoldOutRun);
+              precisions = zeros(1, numberOfHoldOutRun);
+              recalls = zeros(1, numberOfHoldOutRun);
+              f1s = zeros(1, numberOfHoldOutRun);
               LossIndex = 1;
               for holdOutTestRunCount = 1:numberOfHoldOutRun
                 % calculate train and test subset indeces
@@ -76,21 +77,32 @@ classdef LetterDecisionTreeClass < handle
                 yTrain = y(trainSubsetIdx, :);
                 xTest = x(testSubsetIdx, :);
                 yTest = y(testSubsetIdx, :);
-                [trainLoss, testLoss, misclassifiedCount] = obj.buildAndTestTree(xTrain, ...
+                [trainLoss, testLoss, misclassifiedCount, ...
+                    accuracy, ...
+                    precision, recall, f1] ...
+                = obj.buildAndTestTree(xTrain, ...
                                       yTrain, xTest, yTest, ...
                                       splitCriterion, maxNumSplit, classNames);
                 trainLosses(LossIndex) =trainLoss;
                 testLosses(LossIndex) =testLoss;
-                misclassificationCounts(LossIndex) = misclassifiedCount;
+                accuracies(LossIndex) = accuracy;
+                precisions(LossIndex) = precision;
+                recalls(LossIndex) = recall;
+                f1s(LossIndex) = f1;
                 LossIndex = LossIndex + 1;
               end % holdOutTestRunCount
               endTime = cputime;
               avgTrainLoss = mean(trainLosses);
               avgTestLoss = mean(testLosses);
-              avgMisclassificationCount = mean(misclassificationCounts);
+              avgPrecision = mean(precisions);
+              avgAccuracy = mean(accuracies);
+              avgRecall = mean(recalls);
+              avgF1 = mean(f1s);
               resultsTable.appendResult(trainValidateProportion, maxNumSplit, ...
                                        splitCriterion, numberOfHoldOutRun, ...
-                                       avgTrainLoss, avgTestLoss, avgMisclassificationCount, size(yTest, 1), endTime - startTime);
+                                       avgTrainLoss, avgTestLoss, ...
+                                       avgAccuracy, avgPrecision, avgRecall, avgF1, ...
+                                       size(yTest, 1), endTime - startTime);
             end % numberOfHoldOutRun
           end % splitCriterion
         end % maxNumSplit
@@ -122,15 +134,18 @@ classdef LetterDecisionTreeClass < handle
             xTest = x;
             yTest = y;
             trainValidateProportion = size(yTrain) / (size(yTrain ) + size(yTest));
-            [trainLoss, testLoss, misclassifiedCount] = obj.buildAndTestTree(xTrain, ...
+            [trainLoss, testLoss, misclassifiedCount, ...
+              accuracy, ...
+              precision, recall, f1] = obj.buildAndTestTree(xTrain, ...
                                   yTrain, xTest, yTest, ...
                                   splitCriterion, maxNumSplit, classNames);
-            trainLoss = trainLoss;
-            testLoss = testLoss;
             endTime = cputime;
             resultsTable.appendResult(trainValidateProportion, maxNumSplit, ...
                                      splitCriterion, 1, ...
-                                     trainLoss, testLoss, misclassifiedCount, size(yTest, 1), endTime - startTime);
+                                     trainLoss, testLoss, ...
+                                     accuracy, ...
+                                      precision, recall, f1, ...
+                                   size(yTest, 1), endTime - startTime);
           end
         end
       end
@@ -147,7 +162,11 @@ classdef LetterDecisionTreeClass < handle
     %   xTest is passed to predict
     %   yTest are the expected results.
     %
-    function [trainingLoss, testLoss, misclassifiedCount] = buildAndTestTree(obj, xTrain, yTrain, xTest, yTest, splitCriterion, maxNumSplit, classNames)
+    function [trainingLoss, testLoss, misclassifiedCount, accuracy, ...
+              precision, recall, f1] = ...
+            buildAndTestTree(obj, ...
+                              xTrain, yTrain, xTest, yTest, ...
+                              splitCriterion, maxNumSplit, classNames)
       % Grow the decision tree using the training subset
       treeModel = fitctree( ...
           xTrain, ...
@@ -159,11 +178,13 @@ classdef LetterDecisionTreeClass < handle
       % predict
       [predictionResult, nodeNumbers] = predict(treeModel, xTest);
       % errors
-      misclassifiedCount = sum(predictionResult ~= categorical(table2array(yTest)));
-      %obj.compareCategoricalPredictionToTableExpected( ...
-       %                       predictionResult, yTest);
-      trainingLoss = loss(treeModel, xTrain, yTrain);
+      yTestArray = table2array(yTest);
+      misclassifiedCount = sum(predictionResult ~= categorical(yTestArray));
       testLoss = loss(treeModel, xTest, yTest);
+      [accuracy, precision, recall, ...
+        f1] = CalcUtil.calculateMeasuresFromExpectPredict(yTestArray, predictionResult);
+      trainingLoss = loss(treeModel, xTrain, yTrain);
+      
       if obj.debug
         % display random 5 predictions
         predictionResult(randsample(numel(predictionResult), 5))
