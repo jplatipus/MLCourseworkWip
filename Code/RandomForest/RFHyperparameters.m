@@ -4,8 +4,8 @@ classdef RFHyperparameters < handle
   
   properties
     features = [2, 4, 6, 8, 10, 12];
-    trees = [125, 50, 75, 100];
-    folds = [1, 2, 5];
+    trees = [50, 100, 150, 200];
+    folds = [2, 3, 5];
     randomSeed = 122;
   end % properties
   
@@ -25,7 +25,7 @@ classdef RFHyperparameters < handle
      rfHyperparameters = RFHyperparameters();
      rfHyperparameters.features = [2, 4];
      rfHyperparameters.trees = [25];
-     rfHyperparameters.folds = [1, 2]
+     rfHyperparameters.folds = [2, 3]
    end % function
   
    function rfHyperparameters = getHyperDefaultInstance()

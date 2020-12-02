@@ -4,12 +4,17 @@ classdef RandomForestClass < handle
   
   properties
     hyperparameters;
+    defaultRandomStream;
+    treeBaggerRandomStream;
     debug = false;
   end
   
   methods
     function obj = RandomForestClass(rfHyperparameters)
       obj.hyperparameters = rfHyperparameters;
+      obj.defaultRandomStream = RandStream('mt19937ar');
+      obj.treeBaggerRandomStream = RandStream('mt19937ar');
+      RandStream.setGlobalStream(obj.defaultRandomStream)
     end
     
     function rfResults = performAnalysis(obj, letterDataset, csvFilename)
@@ -20,16 +25,17 @@ classdef RandomForestClass < handle
       numExamples = size(letterDataset.trainTable, 1);  
       % unique set of values that can appear in the predicted results:
       classNames = categorical(table2array(letterDataset.validClassValues));
-
       
       [x, y] = letterDataset.extractXYFromTable(letterDataset.trainTable);
       % calculate prior distribution of classes based on training dataset
       yAsArray = table2array(y);
       freqDist = cell2table(tabulate(yAsArray));
       priorDistribution = freqDist{:,3}/100;
+      rng(obj.hyperparameters.randomSeed);
+      % start initialising the treebagger random number generator seed.
       randomTreeBagSeed = 1;
-      for numFeature = obj.hyperparameters.features
-        for numTree = obj.hyperparameters.trees
+      for numTree = obj.hyperparameters.trees
+        for numFeature = obj.hyperparameters.features
           for numFolds = obj.hyperparameters.folds
             errTrain = zeros(size(numFolds,2),1);
             errValid = zeros(size(numFolds,2),1);
@@ -64,15 +70,15 @@ classdef RandomForestClass < handle
                                 priorDistribution, numFeature, randomTreeBagSeed);              
               errTrain(foldCount) = trainingErr;
               errValid(foldCount) = testErr;
-              errOob(foldCount)  = oobErr
-              accuracies(foldCount) = accuracy
+              errOob(foldCount)  = oobErr;
+              accuracies(foldCount) = accuracy;
               precisions(foldCount) = precision;
               recalls(foldCount) = recall;
               f1s(foldCount) = f1;
               if obj.debug
                 % check cross valid is different
-                fprintf("tree %d feature %d trainError %0.04f test error %0.04f "+ ...
-                        "oob error %0.04f fold %d  of %d " + ...
+                fprintf("\tnumTree %d numFeature %d trainErr %0.04f testErr %0.04f "+ ...
+                        "oobErr %0.04f fold %d  of %d " + ...
                         "\tSamples: %s %s %s %s %s\n", ...
                         numTree, numFeature, errTrain(foldCount), errValid(foldCount), ...
                         errOob(foldCount),foldCount, numFolds, ...
@@ -88,25 +94,38 @@ classdef RandomForestClass < handle
               mean(errValid), mean(errOob), ...
               mean(accuracies), mean(precisions), mean(recalls), mean(f1s), ...
               size(yTest, 1), elapsedTime);
+            % next set of folds use a different random tree
             randomTreeBagSeed = randomTreeBagSeed + 1;
           end % folds
-        end % tree
-      end % feature
+        end % feature
+      end % tree
       rfResults.endGatheringResults();
     end % function
     
+    %
+    % grows the tree ensemble, setting the global random number generator 
+    % treeBaggerRandomStream with the randomTreeBaggerSeed.
+    % restores global random number generator to the defaultRandomStream
+    % before exit.
+    % 
+    % creates the random forest, trains it and tests it using the given
+    % parameters.
     function [trainingLoss, testLoss, oobErr, misclassifiedCount, ...
                     model, accuracy, precision, recall, f1] = ...
               buildAndTestTreeBagger(obj, numTree, xTrain, yTrain, xTest, yTest, ...
-                                    priorDistribution, numFeature, randomSeed)
-        rng(randomSeed);
-        model = TreeBagger(numTree, xTrain, yTrain, 'OOBPrediction','On',...
-                                'Method','classification', ...
-                                'Prior', priorDistribution, ...
-                                'NumPredictorsToSample', numFeature); 
-        trainingLoss = mean(error(model, xTrain, yTrain));                              
-        testLoss = mean(error(model, xTest, yTest));
-        oobErr = mean(oobError(model));
+                                    priorDistribution, numFeature, randomTreeBaggerSeed) 
+      % use the random number generator instance for growing the ensemble
+      RandStream.setGlobalStream(obj.treeBaggerRandomStream);
+      rng(randomTreeBaggerSeed);
+      model = TreeBagger(numTree, xTrain, yTrain, 'OOBPrediction','On',...
+                              'Method','classification', ...
+                              'Prior', priorDistribution, ...
+                              'NumPredictorsToSample', numFeature); 
+      trainingLoss = mean(error(model, xTrain, yTrain));                              
+      testLoss = mean(error(model, xTest, yTest));
+      oobErr = mean(oobError(model));
+      % restore the random number generator instance to the "default" one
+      RandStream.setGlobalStream(obj.defaultRandomStream);
       % predict using given xTest
       [predictionResult, ~] = predict(model, xTest);
       % errors
@@ -119,13 +138,12 @@ classdef RandomForestClass < handle
         % percent match
         %predictionResult(randsample(numel(predictionResult), 5))
         percentMisclassified = (misclassifiedCount / size(yTest, 1)) * 100;
-        fprintf("Misclassified %d entries out of %d. %0.04f pct\n", misclassifiedCount, size(yTest, 1), percentMisclassified);
-        fprintf("\tTraining loss: %0.02f. Test Loss: %0.02f Oob Error: %0.02f\n", trainingLoss, testLoss, oobErr);
+        fprintf("Misclassified %d entries out of %d. %0.04f pct", misclassifiedCount, size(yTest, 1), percentMisclassified);
+        fprintf("\tTraining loss: %0.02f. Test Loss: %0.02f Oob Error: %0.02f", trainingLoss, testLoss, oobErr);
         fprintf("\tPrecision: %0.04f Recall: %0.04f Accuracy: %0.04f F1: %0.04f\n", ...
                  precision, recall, accuracy, f1);      
       end % debug        
-    end % function
-    
+    end % function  
   end % methods
 end % class
 

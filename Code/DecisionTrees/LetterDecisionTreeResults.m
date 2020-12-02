@@ -100,5 +100,13 @@ classdef LetterDecisionTreeResults < handle
       'Position',[0.139097200877803 0.799736733387832 0.190114065664802 0.0999999973009218]);
     end
   end % methods
+  
+  methods(Static)
+    function instance = getInstanceFromCsvResults(csvFilename)
+      instance = LetterDecisionTreeResults(csvFilename);
+      instance.resultsTable = readtable(csvFilename, "Delimiter", "\t");  
+    end  % function  
+    
+  end % methods(Static)
 end % class
 

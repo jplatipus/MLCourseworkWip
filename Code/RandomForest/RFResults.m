@@ -68,6 +68,15 @@ classdef RFResults < handle
       obj.fileHandle = -1;
       obj.resultsTable = readtable(obj.outputResultsFilename, "Delimiter", "\t");
     end % function 
-  end
+    
+  end % methods
+  
+  methods(Static)
+    function instance = getInstanceFromCsvResults(csvFilename)
+      instance = RFResults(csvFilename);
+      instance.resultsTable = readtable(csvFilename, "Delimiter", "\t");  
+    end  % function  
+    
+  end % methods(Static)
 end
 

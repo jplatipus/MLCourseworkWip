@@ -63,6 +63,14 @@ classdef NBayesResults < handle
       obj.fileHandle = -1;
       obj.resultsTable = readtable(obj.outputResultsFilename, "Delimiter", "\t");
     end % function  
-  end
+  end % methods
+  
+  methods(Static)
+    function instance = getInstanceFromCsvResults(csvFilename)
+      instance = NBayesResults(csvFilename);
+      instance.resultsTable = readtable(csvFilename, "Delimiter", "\t");  
+    end  % function  
+    
+  end % methods(Static)
 end
 
