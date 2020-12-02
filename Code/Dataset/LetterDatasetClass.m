@@ -21,7 +21,8 @@ classdef LetterDatasetClass < handle
       % flag indicating if the dataset has been standardised: 
       % (Center and scale to have mean 0 and standard deviation 1)
       isStandardised = false;
-      
+      % has some features been removed
+      isRemovedFeature = false;
     end % properties
     
     methods
@@ -62,6 +63,7 @@ classdef LetterDatasetClass < handle
           obj.trainTable = removevars(obj.trainTable, columnName);
           obj.testTable = removevars(obj.testTable, columnName);
           obj.datasetContentsAsTable = removevars(obj.datasetContentsAsTable, columnName);
+          obj.isRemovedFeature = true;
         end
         
         %
@@ -152,6 +154,14 @@ classdef LetterDatasetClass < handle
             '%0.2f', 'TickAngle', 45, 'Colorbar', true, 'ShowAllTicks', true);
           title(plotTitle);
           
+          %% Plot correlation of p-values
+          % print standard deviation of the variables in x
+          uiFigure = figure("Name", plotTitle + ' p-values');
+            
+          [hImage, hText, hXText] = heatmap2(pValue, obj.featureNames,obj.featureNames, ...
+            '%0.2f', 'TickAngle', 45, 'Colorbar', false, 'ShowAllTicks', true, 'Colormap', 'copper', "TextColor", 'white');
+          title(plotTitle + ' p-values');
+          
         end
         
         %
@@ -168,14 +178,16 @@ classdef LetterDatasetClass < handle
           color = lines(26);
           [h,ax,bigax] = gplotmatrix(mat, mat, targetMat, color, [], [], [], 'variable', xnames, ynames);
           title(plotTitle);
+          xsize = size(x);
+          numFeatures = xsize(1,2);
           % Align scatterplot labels, remove tick labels
-          for xy = 1:16
-            ax(16, xy).XLabel.Rotation = 45;
-            ax(16, xy).XTickLabel = [''];
-            ax(16, xy).XLabel.HorizontalAlignment = 'right';
-            ax(xy, 1).YLabel.Rotation = 0;
-            ax(xy, 1).YTickLabel = [''];
-            ax(xy, 1).YLabel.HorizontalAlignment = 'right';
+          for xy = 1:numFeatures
+            ax(numFeatures, xy).XLabel.Rotation = 45;
+            ax(numFeatures, xy).XTickLabel = [''];
+            ax(numFeatures, xy).XLabel.HorizontalAlignment = 'right';
+            ax(numFeatures, 1).YLabel.Rotation = 0;
+            ax(numFeatures, 1).YTickLabel = [''];
+            ax(numFeatures, 1).YLabel.HorizontalAlignment = 'right';
           end
         end
         

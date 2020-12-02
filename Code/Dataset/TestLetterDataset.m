@@ -10,23 +10,42 @@ clf
 close all
 letterDatasetNotNormalised = LetterDatasetClass(false);
 letterDatasetStandardised = LetterDatasetClass(true);
-letterDatasets = [letterDatasetNotNormalised letterDatasetStandardised];
+letterDatasetStandardisedReducedFeatures = LetterDatasetClass(true);
+letterDatasetStandardisedReducedFeatures.removeColumn("xBox");
+letterDatasetStandardisedReducedFeatures.removeColumn("yBox");
+letterDatasetStandardisedReducedFeatures.removeColumn("width");
+letterDatasetStandardisedReducedFeatures.removeColumn("height");
+letterDatasets = [letterDatasetNotNormalised letterDatasetStandardised letterDatasetStandardisedReducedFeatures];
 
 %% Display dataset analysis for both datasets: plots should be the same for 
 % for both, console outputs min median and max are different for the
 % dataset column values.
 for letterDataset = letterDatasets
-  normText = "(~normalised)";
-  if letterDataset.isStandardised
-    normText = "(standardised)";
+  expectedTrainExamples = 16000;
+  expectedTestExamples = 4000;
+  expectedAttributes = 17;
+  if letterDataset.isRemovedFeature
+    expectedAttributes = 13;
   end
+  checkDataset(letterDataset, expectedTrainExamples, expectedTestExamples, expectedAttributes)
+end
+
+function checkDataset(letterDataset, expectedTrainExamples, expectedTestExamples, expectedAttributes)
+  normText = "(~normalised";
+  if letterDataset.isStandardised
+    normText = "(standardised";
+  end
+  if letterDataset.isRemovedFeature
+    normText = normText + ", feature selection";
+  end
+  normText = normText + ")";
   fprintf("Dataset information %s\n", normText);
   trainSize = size(letterDataset.trainTable);
   testSize = size(letterDataset.testTable);
-  assert(trainSize(1) == 16000, "Expected the dataset training to contain 16000 examples");
-  assert(trainSize(2) == 17, "Expected the dataset training to contain 16 features plus 1 target value");
-  assert(testSize(1) == 4000, "Expected the dataset training to contain 16000 examples");
-  assert(testSize(2) == 17, "Expected the dataset training to contain 16 features plus 1 target value");
-  disp("The dataset was successfully created.");
+  assert(trainSize(1) == expectedTrainExamples, "Expected the dataset training to contain " + expectedTrainExamples + " examples");
+  assert(trainSize(2) == expectedAttributes, "Expected the dataset training to contain " + expectedAttributes + " attributes");
+  assert(testSize(1) == expectedTestExamples, "Expected the dataset training to contain " + expectedTrainExamples + " examples");
+  assert(testSize(2) == expectedAttributes, "Expected the dataset training to contain " + expectedAttributes + " attributes");
   letterDataset.displayDatasetInformation();
+  disp("The dataset " + normText + " was successfully created.");
 end

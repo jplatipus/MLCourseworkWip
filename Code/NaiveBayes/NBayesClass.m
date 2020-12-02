@@ -107,7 +107,7 @@ classdef NBayesClass < handle
     % results as a results class instance.
     %
     function letterNBayesResults = performHyperparameterSearch(obj, hyperparameters, resultsCsvFilename)
-      fprintf("Starting decision tree analysis...\n");
+      fprintf("Starting Naive Bayes analysis...\n");
       rng(hyperparameters.randomSeed);
       numExamples = size(obj.dataset.trainTable, 1);  
       % unique set of values that can appear in the predicted results:
