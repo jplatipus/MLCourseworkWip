@@ -10,6 +10,9 @@ classdef RandomForestClass < handle
   end
   
   methods
+    %
+    % Constructor: initialise random streams for bagging and forest
+    % training
     function obj = RandomForestClass(rfHyperparameters)
       obj.hyperparameters = rfHyperparameters;
       obj.defaultRandomStream = RandStream('mt19937ar');
@@ -17,6 +20,10 @@ classdef RandomForestClass < handle
       RandStream.setGlobalStream(obj.defaultRandomStream)
     end
     
+    %
+    % Perform hyperparameter search,
+    % save results to csv file, return results (file contents) wrapped in a class
+    %
     function rfResults = performAnalysis(obj, letterDataset, csvFilename)
       rfResults = RFResults(csvFilename);
       rfResults.startGatheringResults();
@@ -37,6 +44,7 @@ classdef RandomForestClass < handle
       for numTree = obj.hyperparameters.trees
         for numFeature = obj.hyperparameters.features
           for numFolds = obj.hyperparameters.folds
+            % initialise arrays to hold results (1 per fold)
             errTrain = zeros(size(numFolds,2),1);
             errValid = zeros(size(numFolds,2),1);
             errOob = zeros(size(numFolds,2),1);
@@ -44,7 +52,10 @@ classdef RandomForestClass < handle
             precisions = zeros(size(numFolds,2),1);
             recalls = zeros(size(numFolds,2),1);
             f1s = zeros(size(numFolds,2),1);
+            predictTimes = zeros(size(numFolds,2),1);
             startTime = cputime;
+            % for each fold train & predict using bagging using
+            % hyperparameters selected for this loop.
             for foldCount = 1:numFolds
               % calculate train and test subset indeces
               partition = cvpartition(numExamples, 'Holdout', 0.2);
@@ -55,17 +66,8 @@ classdef RandomForestClass < handle
               yTrain = y(trainSubsetIdx, :);
               xTest = x(testSubsetIdx, :);
               yTest = y(testSubsetIdx, :);
-              %{
-              model = TreeBagger(numTree, xTrain, yTrain, 'OOBPrediction','On',...
-                                'Method','classification', ...
-                                'Prior', priorDistribution, ...
-                                'NumPredictorsToSample', numFeature);
-                            errTrain(foldCount) = mean(error(model, xTrain, yTrain));
-              errValid(foldCount) = mean(error(model, xTest, yTest));
-              errOob (foldCount)  = mean(oobError(model));
-              %}
               [trainingErr, testErr, oobErr, misclassifiedCount, ...
-                    model, accuracy, precision, recall, f1] = ...
+                    model, accuracy, precision, recall, f1, predictTime] = ...
                    obj.buildAndTestTreeBagger(numTree, xTrain, yTrain, xTest, yTest, ...
                                 priorDistribution, numFeature, randomTreeBagSeed);              
               errTrain(foldCount) = trainingErr;
@@ -75,13 +77,14 @@ classdef RandomForestClass < handle
               precisions(foldCount) = precision;
               recalls(foldCount) = recall;
               f1s(foldCount) = f1;
+              predictTimes(foldCount) = predictTime;
               if obj.debug
-                % check cross valid is different
+                % check bag is different, display train/predict result
                 fprintf("\tnumTree %d numFeature %d trainErr %0.04f testErr %0.04f "+ ...
-                        "oobErr %0.04f fold %d  of %d " + ...
+                        "oobErr %0.04f fold %d  of %d predictTime %0.04f" + ...
                         "\tSamples: %s %s %s %s %s\n", ...
                         numTree, numFeature, errTrain(foldCount), errValid(foldCount), ...
-                        errOob(foldCount),foldCount, numFolds, ...
+                        errOob(foldCount),foldCount, numFolds, predictTime, ...
                         string(table2array(yTrain(1,1))), ...
                         string(table2array(yTrain(2,1))), ...
                         string(table2array(yTrain(3,1))), ...
@@ -90,10 +93,11 @@ classdef RandomForestClass < handle
               end %debug
             end %foldCount
             elapsedTime = cputime - startTime;
+            % save mean results for all folds to csv file
             rfResults.appendResult(numFolds, numTree, numFeature, randomTreeBagSeed, mean(errTrain), ...
               mean(errValid), mean(errOob), ...
               mean(accuracies), mean(precisions), mean(recalls), mean(f1s), ...
-              size(yTest, 1), elapsedTime);
+              size(yTest, 1), elapsedTime, mean(predictTimes));
             % next set of folds use a different random tree
             randomTreeBagSeed = randomTreeBagSeed + 1;
           end % folds
@@ -108,10 +112,10 @@ classdef RandomForestClass < handle
     % restores global random number generator to the defaultRandomStream
     % before exit.
     % 
-    % creates the random forest, trains it and tests it using the given
+    % creates the random forest, trains it and predicts it using the given
     % parameters.
     function [trainingLoss, testLoss, oobErr, misclassifiedCount, ...
-                    model, accuracy, precision, recall, f1] = ...
+                    model, accuracy, precision, recall, f1, predictTime] = ...
               buildAndTestTreeBagger(obj, numTree, xTrain, yTrain, xTest, yTest, ...
                                     priorDistribution, numFeature, randomTreeBaggerSeed) 
       % use the random number generator instance for growing the ensemble
@@ -127,7 +131,9 @@ classdef RandomForestClass < handle
       % restore the random number generator instance to the "default" one
       RandStream.setGlobalStream(obj.defaultRandomStream);
       % predict using given xTest
+      startTime = cputime;
       [predictionResult, ~] = predict(model, xTest);
+      predictTime = cputime - startTime;
       % errors
       misclassifiedCount = sum(predictionResult ~= categorical(table2array(yTest)));
 

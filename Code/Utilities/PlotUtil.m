@@ -78,9 +78,12 @@ classdef PlotUtil
     function plotTime(resultsTable, plotTitle)
             fig = figure("Name", plotTitle);
       ax = axes('Parent', fig);
+      hold(ax, 'on');
       legend1 = legend(ax, 'show');
       times = resultsTable.elapsedTime;
-      plot(times, 'Color', [0.4660 0.6740 0.1880], 'DisplayName','Time (seconds)','MarkerSize',15,'Marker','.');    
+      predictTimes = resultsTable.predictTime;
+      plot(times, 'Color', [0.6740 0.4660  0.1880], 'DisplayName','Train&Predict','MarkerSize',15,'Marker','.');    
+      plot(predictTimes, 'Color', [0.4660 0.1880 0.6740 ], 'DisplayName',' Mean Predict','MarkerSize',15,'Marker','.');    
       ylabel("Elapsed time (seconds)");
       xlabel("Result table row No.");
       title(plotTitle); 

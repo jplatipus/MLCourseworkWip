@@ -1,3 +1,0 @@
-numberOfHoldOutRun	trainValidateProportion	maxNumSplit	splitCriterion	avgTrainAccuracy	avgTestAccuracy	misclassifiedEntryCount	entryCount	elapsedTime
-2	0.20	100	gdi	0.6709	0.6172	4897.0000	12800	5.3750
-5	0.20	100	gdi	0.6559	0.6097	4977.8000	12800	12.5938
