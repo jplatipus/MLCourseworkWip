@@ -3,7 +3,12 @@ classdef NBayesClass < handle
   % contains the code to perform the initial automatic hyperparameter
   % search, and the detailed hyperparameter search
   properties
+    % default random stream initial value
     randomSeed = 300;
+    % random stream used by default
+    defaultRandomStream;
+    % random stream used when training naive bayes
+    nBayesRandomStream;
     debug = false;
     % letter dataset used in this instance:
     dataset;
@@ -50,6 +55,9 @@ classdef NBayesClass < handle
     %
     function obj = NBayesClass(letterDataset)
       obj.dataset = letterDataset;
+      obj.defaultRandomStream = RandStream('mt19937ar');
+      obj.nBayesRandomStream = RandStream('mt19937ar');
+      RandStream.setGlobalStream(obj.defaultRandomStream)      
       rng(obj.randomSeed);
       [obj.x, obj.y] = obj.dataset.extractXYFromTable(obj.dataset.trainTable);
       [obj.xt, obj.yt] = obj.dataset.extractXYFromTable(obj.dataset.testTable);
@@ -169,15 +177,14 @@ classdef NBayesClass < handle
                     fprintf("%0.04f ", aPrior);
                   end
                   fprintf('\n');
-                end
-                %obj.debug;
+                end %obj.debug;
                 [trainingLoss, testLoss, misclassifiedCount, ...
                     distributionName, smootherTypeName, model, ...
                     accuracy, precision, recall, ...
                     f1, predictTime] =...
                   obj.buildAndTestNBayes(xTrain, yTrain, xTest, yTest, ...
                     distributionNameCells, smootherType, priorDistribution, width, ...
-                    classNames);
+                    classNames, foldCount);
                 accuracies(foldCount) = accuracy;
                 precisions(foldCount) = precision;
                 recalls(foldCount) = recall;
@@ -195,7 +202,10 @@ classdef NBayesClass < handle
               avgRecall = mean(recalls);
               avgF1 = mean(f1s);
               avgPredictTime = mean(predictTimes);
-              resultsTable.appendResult(distributionName, smootherTypeName, width, numberOfFolds, ...
+              % use number of folds so that each train uses the same random
+              % seed
+              resultsTable.appendResult(distributionName, smootherTypeName, ...
+                                 width, numberOfFolds, numberOfFolds, ...
                                  avgTrainLoss, avgTestLoss, ...
                                  avgAccuracy, avgPrecision, avgRecall, avgF1, ...
                                  size(yTest, 1), ...
@@ -220,10 +230,13 @@ classdef NBayesClass < handle
     function [trainingLoss, testLoss, misclassifiedCount, ...
         distributionName, smootherTypeName,model, ...
         accuracy, precision, recall, ...
-        f1] = buildAndTestNBayes(obj, xTrain, ...
-                                    yTrain, xTest, yTest, ...
-                                    distributionNames, smootherTypes, priorDistribution, width, classNames)
+        f1, predictTime] = buildAndTestNBayes(obj, xTrain,  yTrain, xTest, yTest, ...
+                        distributionNames, smootherTypes, ...
+                        priorDistribution, width, classNames, nBayesRandomSeed)
       % train naive bayes model
+      % use the random number generator instance for growing the ensemble
+      RandStream.setGlobalStream(obj.nBayesRandomStream);
+      rng(nBayesRandomSeed);
       model = [];
       if width >= 0.0
         model = fitcnb(xTrain, yTrain, ...
@@ -239,9 +252,12 @@ classdef NBayesClass < handle
         distributionName = 'normal';
         smootherTypeName = 'unused';
       end
-      
+      % restore the random number generator instance to the "default" one
+      RandStream.setGlobalStream(obj.defaultRandomStream);
       % predict using given xTest
+      startTime = cputime;
       [predictionResult, ~] = predict(model, xTest);
+      predictTime = cputime - startTime;
       % errors
       misclassifiedCount = sum(predictionResult ~= categorical(table2array(yTest)));
       trainingLoss = loss(model, xTrain, yTrain);
