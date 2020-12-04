@@ -32,6 +32,17 @@ classdef RFHyperparameters < handle
      rfHyperparameters = RFHyperparameters();
    end % function
    
+   % the hyperparameters to use for the final model are: 
+   % 200 trees, 
+   % 4 features, 
+   % 60 as the random seed.
+   function rfHyperparameters = getHyperparametersFinalInstance()
+     rfHyperparameters = RFHyperparameters();
+     rfHyperparameters.trees = 200;
+     rfHyperparameters.features = 4;
+     rfHyperparameters.randomSeed = 60;
+   end
+   
  end % methods(Static)
 end % class
 
