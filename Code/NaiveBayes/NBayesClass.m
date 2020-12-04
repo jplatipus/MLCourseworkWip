@@ -132,11 +132,11 @@ classdef NBayesClass < handle
               trainLosses = zeros(1, numberOfFolds);
               testLosses = zeros(1, numberOfFolds);
               misclassificationCounts = zeros(1, numberOfFolds);  
-              meanAccuracy = zeros(1, numberOfFolds);
-              meanPrecision = zeros(1, numberOfFolds);
-              meanRecall = zeros(1, numberOfFolds);
-              meanF1 = zeros(1, numberOfFolds);
-              meanPredictTime = zeros(1, numberOfFolds);
+              accuracies = zeros(1, numberOfFolds);
+              precisions = zeros(1, numberOfFolds);
+              recalls = zeros(1, numberOfFolds);
+              f1s = zeros(1, numberOfFolds);
+              predictTimes = zeros(1, numberOfFolds);
               % for each fold
               for foldCount = 1:numberOfFolds
                 % get width row matching distributionNames row
@@ -153,9 +153,8 @@ classdef NBayesClass < handle
                 yTrain = y(trainSubsetIdx, :);
                 xTest = x(testSubsetIdx, :);
                 yTest = y(testSubsetIdx, :);
-                obj.debug = true;
                 if obj.debug
-                  fprintf("Test run bag: %d of %d,", foldCount,numberOfFolds);
+                  fprintf("Test run fold: %d of %d,", foldCount,numberOfFolds);
                   fprintf("Width: %0.04f ",width);
                   fprintf("\n\tSmoother Type: ");
                   for str = string(smootherType{1,1})
@@ -171,34 +170,36 @@ classdef NBayesClass < handle
                   end
                   fprintf('\n');
                 end
-                %obj.debug = false;
+                %obj.debug;
                 [trainingLoss, testLoss, misclassifiedCount, ...
                     distributionName, smootherTypeName, model, ...
                     accuracy, precision, recall, ...
-                    f1] =...
+                    f1, predictTime] =...
                   obj.buildAndTestNBayes(xTrain, yTrain, xTest, yTest, ...
                     distributionNameCells, smootherType, priorDistribution, width, ...
                     classNames);
-                meanAccuracy(foldCount) = accuracy;
-                meanPrecision(foldCount) = precision;
-                meanRecall(foldCount) = recall;
-                meanF1(foldCount) = f1;
+                accuracies(foldCount) = accuracy;
+                precisions(foldCount) = precision;
+                recalls(foldCount) = recall;
+                f1s(foldCount) = f1;
                 trainLosses(foldCount) = trainingLoss;
                 testLosses(foldCount) = testLoss;
+                predictTimes(foldCount) = predictTime;
                 misclassificationCounts(foldCount) = misclassifiedCount;
               end % foldCount
               endTime = cputime;
               avgTrainLoss = mean(trainLosses);
               avgTestLoss = mean(testLosses);
-              avgAccuracy = mean(meanAccuracy);
-              avgPrecision = mean(meanPrecision);
-              avgRecall = mean(meanRecall);
-              avgF1 = mean(meanF1);
+              avgAccuracy = mean(accuracies);
+              avgPrecision = mean(precisions);
+              avgRecall = mean(recalls);
+              avgF1 = mean(f1s);
+              avgPredictTime = mean(predictTimes);
               resultsTable.appendResult(distributionName, smootherTypeName, width, numberOfFolds, ...
                                  avgTrainLoss, avgTestLoss, ...
                                  avgAccuracy, avgPrecision, avgRecall, avgF1, ...
                                  size(yTest, 1), ...
-                                 endTime - startTime);
+                                 endTime - startTime, avgPredictTime);
              
           end % priorDistribution
         end % numberOfFolds  
