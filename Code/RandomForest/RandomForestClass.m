@@ -150,6 +150,26 @@ classdef RandomForestClass < handle
                  precision, recall, accuracy, f1);      
       end % debug        
     end % function  
-  end % methods
+      
+  end %methods
+    
+    methods(Static)
+      
+    % build final tree bagger model
+    function [treeBagger, trainTime] = buildFinalRandomForest(numberOfTrees, ...
+        numberOfFeatures, randomSeed, xTrain, yTrain)
+      % calculate prior distribution of classes based on training dataset
+      yAsArray = table2array(yTrain);
+      freqDist = cell2table(tabulate(yAsArray));
+      priorDistribution = freqDist{:,3}/100;
+      rng(randomSeed);
+      startTime = cputime;
+      treeBagger = TreeBagger(numberOfTrees, xTrain, yTrain, 'OOBPrediction','On',...
+                              'Method','classification', ...
+                              'Prior', priorDistribution, ...
+                              'NumPredictorsToSample', numberOfFeatures); 
+      trainTime = cputime - startTime;                     
+    end
+  end % methods(Static)
 end % class
 
