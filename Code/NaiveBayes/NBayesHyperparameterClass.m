@@ -4,7 +4,7 @@ classdef NBayesHyperparameterClass < handle
   
   properties
       randomSeed = 110;
-      numberOfHoldOutRuns = [1 5 10 15 20];
+      numberOfFolds = [1 5 10 15 20];
       distributionNames = [];
       kernelSmoother = [];
       kernelWidths = [];
@@ -17,9 +17,13 @@ classdef NBayesHyperparameterClass < handle
   end % methods
     
   methods(Static)
+    %% Convenience hyperparameter constructors (static)
+    
+    % get an instance for testing the code works, without kernel widths: 
+    % quick run through most of the code
     function hyperparameters = getQuickTestHyperparametersInstance(nBayes)
       hyperparameters = NBayesHyperparameterClass();
-      hyperparameters.numberOfHoldOutRuns = [1];
+      hyperparameters.numberOfFolds = [2];
       % rows of distribution names (eg: kernel, kernel, ....)
       hyperparameters.distributionNames = {[nBayes.distNamesDefault]};
       % rows of widths to go with distribution names rows. So if a
@@ -28,9 +32,11 @@ classdef NBayesHyperparameterClass < handle
       hyperparameters.kernelWidths = [-1.0];
     end
     
+    % get an instance for testing the code works, with kernel widths: 
+    % quick run through most of the code
     function hyperparameters = getKernalNormalQuickHyperparametersInstance(nBayes)
       hyperparameters = NBayesHyperparameterClass();
-      hyperparameters.numberOfHoldOutRuns = [1];
+      hyperparameters.numberOfFolds = [2];
       % rows of distribution names (eg: kernel, kernel, ....) one per
       % width, smoother type
       hyperparameters.distributionNames = { nBayes.distNamesKernel, ...
@@ -44,9 +50,10 @@ classdef NBayesHyperparameterClass < handle
       hyperparameters.kernelWidths = [0.20 0.18 0.13];
     end
     
+    % get kernel box smoother instance
     function hyperparameters = getKernalBoxSmootherHyperparametersInstance(nBayes)
       hyperparameters = NBayesHyperparameterClass();
-      hyperparameters.numberOfHoldOutRuns = [1 2 5];
+      hyperparameters.numberOfFolds = [2 3 5];
       % rows of distribution names (eg: kernel, kernel, ....) one per
       % width, smoother type
       hyperparameters.distributionNames = {nBayes.distNamesKernel, ...
@@ -66,9 +73,10 @@ classdef NBayesHyperparameterClass < handle
       hyperparameters.kernelWidths = [0.20 0.18 0.13 0.12 0.11 0.10 0.090 0.80];
     end
     
+    % get Epanechnikov smoother instance
     function hyperparameters = getKernalEpanechnikovSmootherHyperparametersInstance(nBayes)
       hyperparameters = NBayesHyperparameterClass();
-      hyperparameters.numberOfHoldOutRuns = [1 2 5];
+      hyperparameters.numberOfFolds = [2 3 5];
       % rows of distribution names (eg: kernel, kernel, ....) one per
       % width, smoother type
       hyperparameters.distributionNames = {nBayes.distNamesKernel, ...
@@ -88,9 +96,10 @@ classdef NBayesHyperparameterClass < handle
       hyperparameters.kernelWidths = [0.20 0.18 0.13 0.12 0.11 0.10 0.090 0.80];
     end
     
+    % get normal (Gaussian) smoother instance
     function hyperparameters = getKernalNormalSmootherHyperparametersInstance(nBayes)
       hyperparameters = NBayesHyperparameterClass();
-      hyperparameters.numberOfHoldOutRuns = [1 2 5];
+      hyperparameters.numberOfFolds = [2 3 5];
       % rows of distribution names (eg: kernel, kernel, ....) one per
       % width, smoother type
       hyperparameters.distributionNames = { nBayes.distNamesKernel, ...
@@ -109,9 +118,11 @@ classdef NBayesHyperparameterClass < handle
       hyperparameters.kernelWidths = [0.20 0.18 0.13 0.12 0.11 0.10 0.090 0.80];
     end
     
+    % instance to see how wild kernel widths affect the predictions for a
+    % normal kernel smoother
     function hyperparameters = getKernalNormalSmootherError(nBayes)
       hyperparameters = NBayesHyperparameterClass();
-      hyperparameters.numberOfHoldOutRuns = [1];
+      hyperparameters.numberOfFolds = [2];
       % rows of distribution names (eg: kernel, kernel, ....) one per
       % width, smoother type
       hyperparameters.distributionNames = { nBayes.distNamesKernel, ...
@@ -137,9 +148,10 @@ classdef NBayesHyperparameterClass < handle
                                       0.0000001 0.00000001 0.000000001];
     end
         
+    % get triangle kernel smoother instance
     function hyperparameters = getKernelTriangleSmootherHyperparametersInstance(nBayes)
       hyperparameters = NBayesHyperparameterClass();
-      hyperparameters.numberOfHoldOutRuns = [1 2 5];
+      hyperparameters.numberOfFolds = [2 3 5];
       % rows of distribution names (eg: kernel, kernel, ....) one per
       % width, smoother type
       hyperparameters.distributionNames = {nBayes.distNamesKernel, ...
@@ -159,9 +171,10 @@ classdef NBayesHyperparameterClass < handle
       hyperparameters.kernelWidths = [0.13 0.12 0.11 0.10 0.098351 0.0932 0.090 0.80];
     end
     
+    % get MATLAB's default 'normal' instance. Widths are not used
     function hyperparameters = getDefaultTestHyperparametersInstance(nBayes)
       hyperparameters = NBayesHyperparameterClass();
-      hyperparameters.numberOfHoldOutRuns = [1 2 5 10];
+      hyperparameters.numberOfFolds = [2 3 5];
       % rows of distribution names (eg: kernel, kernel, ....)
       hyperparameters.distributionNames = {nBayes.distNamesDefault };
       % rows of widths to go with distribution names rows. So if a

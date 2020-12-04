@@ -13,6 +13,8 @@ classdef FinalRFModel < handle
   end
   
   methods
+    % Train the final model given the train hyperparameters.
+    % save model and time in class member variables
     function buildFinalModel(obj, xTrain, yTrain, priorDistribution, numberOfTrees, numberOfFeatures, randomSeed)
       rng(randomSeed);
       startTime = cputime;
@@ -24,6 +26,8 @@ classdef FinalRFModel < handle
       obj.modelCreationTime = endTime - startTime;                  
     end
     
+    % perform predict on the model using the given test values
+    % save the calculated metrics and time in the class
     function peformPredict(obj, xTest, yTest)
       startTime = cputime;
       [predictionResult, ~] = predict(obj.model, xTest);

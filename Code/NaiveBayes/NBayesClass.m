@@ -1,7 +1,7 @@
 classdef NBayesClass < handle
-  %NBAYESCLASS Summary of this class goes here
-  %   Detailed explanation goes here
-  
+  %% NBayesClass
+  % contains the code to perform the initial automatic hyperparameter
+  % search, and the detailed hyperparameter search
   properties
     randomSeed = 300;
     debug = false;
@@ -23,6 +23,9 @@ classdef NBayesClass < handle
     % distribution names used in the kernel distribution
     distNamesKernel = {'kernel','kernel','kernel','kernel','kernel','kernel','kernel','kernel','kernel',...
       'kernel','kernel','kernel','kernel','kernel','kernel','kernel'};
+    %
+    % kernel smooting parameters to use for each feature.
+    %
     smoothBox = {'box', 'box', 'box', 'box', 'box', 'box', 'box', 'box', 'box', ...
       'box', 'box', 'box', 'box', 'box', 'box', 'box'};
     smoothEpanechnikov = { 'epanechnikov', 'epanechnikov', 'epanechnikov', ...
@@ -52,7 +55,7 @@ classdef NBayesClass < handle
       [obj.xt, obj.yt] = obj.dataset.extractXYFromTable(obj.dataset.testTable);
     end % constructor
     
-    % Fit the model
+    % Fit the model, set nBayesModel to the model
     function fitModel(obj, distributionNames)
         model = fitcnb(obj.x, obj.y, ...
         'ClassNames', categorical(table2array(obj.dataset.validClassValues)), ...
@@ -67,7 +70,8 @@ classdef NBayesClass < handle
     end
     
     % Set the Matlab model's Prior distribution to reflect the dataset's
-    % training distribution of classes
+    % training distribution of classes.
+    % Update nBayesModel and return it too
     function nBayesModel = setPriorDistributionEmpirical(obj)
       prior = obj.getPriorDistributionEmpirical();
       obj.nBayesModel.Prior = prior;
@@ -121,18 +125,20 @@ classdef NBayesClass < handle
                       % obj.getPriorDistributionNormal()];
       cellsIndex = 1;
       for distributionNameCells = hyperparameters.distributionNames 
-        for numberOfHoldOutRun = hyperparameters.numberOfHoldOutRuns       
+        for numberOfFolds = hyperparameters.numberOfFolds       
           for priorDistribution = priorDistributions
-              % repeat holdout partition creation, build tree, predict this
+              % repeat fold partition creation, build tree, predict this
               startTime = cputime; 
-              trainLosses = zeros(1, numberOfHoldOutRun);
-              testLosses = zeros(1, numberOfHoldOutRun);
-              misclassificationCounts = zeros(1, numberOfHoldOutRun);  
-              meanAccuracy = zeros(1, numberOfHoldOutRun);
-              meanPrecision = zeros(1, numberOfHoldOutRun);
-              meanRecall = zeros(1, numberOfHoldOutRun);
-              meanF1 = zeros(1, numberOfHoldOutRun);
-              for holdOutTestRunCount = 1:numberOfHoldOutRun
+              trainLosses = zeros(1, numberOfFolds);
+              testLosses = zeros(1, numberOfFolds);
+              misclassificationCounts = zeros(1, numberOfFolds);  
+              meanAccuracy = zeros(1, numberOfFolds);
+              meanPrecision = zeros(1, numberOfFolds);
+              meanRecall = zeros(1, numberOfFolds);
+              meanF1 = zeros(1, numberOfFolds);
+              meanPredictTime = zeros(1, numberOfFolds);
+              % for each fold
+              for foldCount = 1:numberOfFolds
                 % get width row matching distributionNames row
                 width = hyperparameters.kernelWidths(cellsIndex);
                 % get smoother type matching distribution names row
@@ -149,7 +155,7 @@ classdef NBayesClass < handle
                 yTest = y(testSubsetIdx, :);
                 obj.debug = true;
                 if obj.debug
-                  fprintf("Test run HoldRunCount: %d of %d,", holdOutTestRunCount,numberOfHoldOutRun);
+                  fprintf("Test run bag: %d of %d,", foldCount,numberOfFolds);
                   fprintf("Width: %0.04f ",width);
                   fprintf("\n\tSmoother Type: ");
                   for str = string(smootherType{1,1})
@@ -173,14 +179,14 @@ classdef NBayesClass < handle
                   obj.buildAndTestNBayes(xTrain, yTrain, xTest, yTest, ...
                     distributionNameCells, smootherType, priorDistribution, width, ...
                     classNames);
-                meanAccuracy(holdOutTestRunCount) = accuracy;
-                meanPrecision(holdOutTestRunCount) = precision;
-                meanRecall(holdOutTestRunCount) = recall;
-                meanF1(holdOutTestRunCount) = f1;
-                trainLosses(holdOutTestRunCount) = trainingLoss;
-                testLosses(holdOutTestRunCount) = testLoss;
-                misclassificationCounts(holdOutTestRunCount) = misclassifiedCount;
-              end % holdOutTestRunCount
+                meanAccuracy(foldCount) = accuracy;
+                meanPrecision(foldCount) = precision;
+                meanRecall(foldCount) = recall;
+                meanF1(foldCount) = f1;
+                trainLosses(foldCount) = trainingLoss;
+                testLosses(foldCount) = testLoss;
+                misclassificationCounts(foldCount) = misclassifiedCount;
+              end % foldCount
               endTime = cputime;
               avgTrainLoss = mean(trainLosses);
               avgTestLoss = mean(testLosses);
@@ -188,14 +194,14 @@ classdef NBayesClass < handle
               avgPrecision = mean(meanPrecision);
               avgRecall = mean(meanRecall);
               avgF1 = mean(meanF1);
-              resultsTable.appendResult(distributionName, smootherTypeName, width, numberOfHoldOutRun, ...
+              resultsTable.appendResult(distributionName, smootherTypeName, width, numberOfFolds, ...
                                  avgTrainLoss, avgTestLoss, ...
                                  avgAccuracy, avgPrecision, avgRecall, avgF1, ...
                                  size(yTest, 1), ...
                                  endTime - startTime);
              
           end % priorDistribution
-        end % numberOfHoldOutRun  
+        end % numberOfFolds  
         cellsIndex = cellsIndex + 1;
       end % distributionName   
       resultsTable.endGatheringResults();

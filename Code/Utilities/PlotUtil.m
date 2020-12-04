@@ -33,7 +33,7 @@ classdef PlotUtil
       ylabel("Loss measure");
       title(plotTitle);
       grid on;
-    end 
+    end %plotLossTestTrainComparisonWithYMax
 
     %
     % Plot the performance metrics: average accuracy, precision, recall, F1
@@ -55,7 +55,7 @@ classdef PlotUtil
       ylabel("Metric Value");
       title(plotTitle); 
       grid on;
-    end
+    end %plotMetrics
 
     %
     % Plot average out of bag error by result table row number.
@@ -73,22 +73,35 @@ classdef PlotUtil
       xlabel("Result table row No.");
       title(plotTitle); 
       grid on;
-    end %method
+    end %plotOob
     
+    % plot avgPredictTime and elapsedTime
     function plotTime(resultsTable, plotTitle)
             fig = figure("Name", plotTitle);
       ax = axes('Parent', fig);
       hold(ax, 'on');
       legend1 = legend(ax, 'show');
       times = resultsTable.elapsedTime;
-      predictTimes = resultsTable.predictTime;
+      predictTimes = resultsTable.avgPredictTime;
       plot(times, 'Color', [0.6740 0.4660  0.1880], 'DisplayName','Train&Predict','MarkerSize',15,'Marker','.');    
       plot(predictTimes, 'Color', [0.4660 0.1880 0.6740 ], 'DisplayName',' Mean Predict','MarkerSize',15,'Marker','.');    
       ylabel("Elapsed time (seconds)");
       xlabel("Result table row No.");
       title(plotTitle); 
       grid on;
-    end
+    end %plotTime
   
+    % plot a confusion chart of the predicted / expected "categorical" values
+    function plotConfusionChart(expected, predicted, title);
+      fig = figure;
+      confusionMat = confusionchart(expected, predicted);
+      fig_Position = fig.Position;
+      % make it bigger to display figures:
+      fig_Position(3) = fig_Position(3)*2;
+      fig_Position(4) = fig_Position(4)*2;
+      fig.Position = fig_Position;
+      confusionMat.Title = title;
+    end %plotConfusionChart
+    
   end % methods static
 end %class
