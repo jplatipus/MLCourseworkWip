@@ -24,13 +24,18 @@ classdef PlotUtil
       hold(ax,'on');
       %xlim(ax,[0 (size(obj.resultsTable, 1) + 1)]);
       ylim(ax,[0.0 yMax]);
-      legend1 = legend(ax,'show');
+      legend1 = legend(ax,'show', 'Location','northeastoutside');
       pd = plot(trainLossMeasure, 'Color',[0.4660 0.6740 0.1880], ...
         'DisplayName','Train','MarkerSize',15,'Marker','.');
       pd = plot(testLossMeasure, 'Color',[0.3010 0.7450 0.9330], ...
         'DisplayName','Test','MarkerSize',15,'Marker','.');
       xlabel("Result table row No.");
       ylabel("Loss measure");
+      fig_Position = fig.Position;
+      % make it bigger to display figures:
+      fig_Position(3) = fig_Position(3)*1.5;
+      fig_Position(4) = fig_Position(4)*1.5;
+      fig.Position = fig_Position;
       title(plotTitle);
       grid on;
     end %plotLossTestTrainComparisonWithYMax
@@ -42,7 +47,7 @@ classdef PlotUtil
       fig = figure("Name", plotTitle);
       ax = axes('Parent', fig);
       hold(ax, 'on');
-      legend1 = legend(ax, 'show');
+      legend1 = legend(ax, 'show', 'Location','northeastoutside');
       acc = resultsTable.avgAccuracy;
       prec = resultsTable.avgPrecision;
       rec = resultsTable.avgRecall;
@@ -53,6 +58,11 @@ classdef PlotUtil
       plot(f1, 'Color', [0.4660 0.6740 0.1880], 'DisplayName','F1','MarkerSize',15,'Marker','.');
       xlabel("Result table row No.");
       ylabel("Metric Value");
+      fig_Position = fig.Position;
+      % make it bigger to display figures:
+      fig_Position(3) = fig_Position(3)*1.5;
+      fig_Position(4) = fig_Position(4)*1.5;
+      fig.Position = fig_Position;      
       title(plotTitle); 
       grid on;
     end %plotMetrics
@@ -64,13 +74,18 @@ classdef PlotUtil
       ax = axes('Parent', fig);
       hold(ax, 'on');
       %ylim(ax, [0.0 yMax]);
-      legend1 = legend(ax, 'show');
+      legend1 = legend(ax, 'show', 'Location','northeastoutside');
       if ismember('avgOobLoss', resultsTable.Properties.VariableNames)
         oob = resultsTable.avgOobLoss;
         plot(oob, 'Color', [0.4660 0.6740 0.1880], 'DisplayName','Oob Error','MarkerSize',15,'Marker','.');    
       end  
       ylabel("Out of Bag Loss");
       xlabel("Result table row No.");
+      fig_Position = fig.Position;
+      % make it bigger to display figures:
+      fig_Position(3) = fig_Position(3)*1.5;
+      fig_Position(4) = fig_Position(4)*1.5;
+      fig.Position = fig_Position;      
       title(plotTitle); 
       grid on;
     end %plotOob
@@ -80,13 +95,18 @@ classdef PlotUtil
             fig = figure("Name", plotTitle);
       ax = axes('Parent', fig);
       hold(ax, 'on');
-      legend1 = legend(ax, 'show');
+      legend1 = legend(ax, 'show', 'Location','northeastoutside');
       times = resultsTable.elapsedTime;
       predictTimes = resultsTable.avgPredictTime;
       plot(times, 'Color', [0.6740 0.4660  0.1880], 'DisplayName','Train&Predict','MarkerSize',15,'Marker','.');    
       plot(predictTimes, 'Color', [0.4660 0.1880 0.6740 ], 'DisplayName',' Mean Predict','MarkerSize',15,'Marker','.');    
       ylabel("Elapsed time (seconds)");
       xlabel("Result table row No.");
+      fig_Position = fig.Position;
+      % make it bigger to display figures:
+      fig_Position(3) = fig_Position(3)*1.5;
+      fig_Position(4) = fig_Position(4)*1.5;
+      fig.Position = fig_Position;
       title(plotTitle); 
       grid on;
     end %plotTime

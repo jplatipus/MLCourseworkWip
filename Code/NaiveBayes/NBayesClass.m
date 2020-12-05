@@ -22,6 +22,7 @@ classdef NBayesClass < handle
     xt; 
     % test results:
     yt;
+   
     % distribution names used in the default (normal) distribution
     distNamesDefault = {'normal','normal','normal','normal','normal','normal','normal','normal','normal',...
       'normal','normal','normal','normal','normal','normal','normal'};
@@ -46,8 +47,8 @@ classdef NBayesClass < handle
     smoothUnsused = {'N/A', 'N/A', 'N/A', 'N/A', 'N/A',...
       'N/A', 'N/A', 'N/A', 'N/A', 'N/A', 'N/A', ...
       'N/A', 'N/A', 'N/A', 'N/A', 'N/A'};
-  end
-  
+  end % Properties
+
   methods
     
     %% Constructor
@@ -316,6 +317,23 @@ classdef NBayesClass < handle
       nBayesClassInstance.smoothEpanechnikov = nBayesClassInstance.smoothEpanechnikov(:,1:attributeCount - 1);
       nBayesClassInstance.smoothNormal = nBayesClassInstance.smoothNormal(:,1:attributeCount - 1);
       nBayesClassInstance.smoothTriangle = nBayesClassInstance.smoothTriangle(:,1:attributeCount - 1);
+    end
+    
+    % build final Naive Bayes model
+    function [nBayes, trainTime] = buildFinalNBayes(distributionNames, ...
+        smootherTypes, width, nBayesRandomSeed, classNames, xTrain, yTrain)
+      % calculate prior distribution of classes based on training dataset
+      yAsArray = table2array(yTrain);
+      freqDist = cell2table(tabulate(yAsArray));
+      priorDistribution = freqDist{:,3}/100;
+      rng(nBayesRandomSeed);
+      startTime = cputime;
+      % train naive bayes model
+      nBayes = fitcnb(xTrain, yTrain, ...
+        'ClassNames', classNames, 'DistributionNames', [distributionNames{:,:}], ...
+        'Prior', priorDistribution, 'kernel', [smootherTypes{:,:}], 'width', width);
+      endTime = cputime;
+      trainTime = endTime - startTime;                   
     end
   end % static methods
 end
