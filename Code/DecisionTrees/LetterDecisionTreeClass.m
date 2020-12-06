@@ -52,61 +52,66 @@ classdef LetterDecisionTreeClass < handle
       classNames = categorical(table2array(obj.dataset.validClassValues));
       resultsTable = LetterDecisionTreeResults(resultsCsvFilename);
       resultsTable.startGatheringResults();
-      for trainValidateProportion = hyperparameters.trainValidateProportions
-        for maxNumSplit = hyperparameters.maxNumSplits
-          for splitCriterion = hyperparameters.splitCriteria
-            for numberOfHoldOutRun = hyperparameters.numberOfHoldOutRuns
-              % repeat holdout partition creation, build tree, predict this
-              % number of times to get average:
-              startTime = cputime; 
-              trainLosses = zeros(1, numberOfHoldOutRun);
-              testLosses = zeros(1, numberOfHoldOutRun);
-              accuracies = zeros(1, numberOfHoldOutRun);
-              precisions = zeros(1, numberOfHoldOutRun);
-              recalls = zeros(1, numberOfHoldOutRun);
-              f1s = zeros(1, numberOfHoldOutRun);
-              LossIndex = 1;
-              for holdOutTestRunCount = 1:numberOfHoldOutRun
-                % calculate train and test subset indeces
-                partition = cvpartition(numExamples, 'Holdout', 1.0 - trainValidateProportion);
-                trainSubsetIdx = training(partition);
-                testSubsetIdx = test(partition);
-                [x, y] = obj.dataset.extractXYFromTable(obj.dataset.trainTable);
-                % extract train and test subsets
-                xTrain = x(trainSubsetIdx, :);
-                yTrain = y(trainSubsetIdx, :);
-                xTest = x(testSubsetIdx, :);
-                yTest = y(testSubsetIdx, :);
-                [trainLoss, testLoss, misclassifiedCount, ...
-                    accuracy, ...
-                    precision, recall, f1] ...
-                = obj.buildAndTestTree(xTrain, ...
-                                      yTrain, xTest, yTest, ...
-                                      splitCriterion, maxNumSplit, classNames);
-                trainLosses(LossIndex) =trainLoss;
-                testLosses(LossIndex) =testLoss;
-                accuracies(LossIndex) = accuracy;
-                precisions(LossIndex) = precision;
-                recalls(LossIndex) = recall;
-                f1s(LossIndex) = f1;
-                LossIndex = LossIndex + 1;
-              end % holdOutTestRunCount
-              endTime = cputime;
-              avgTrainLoss = mean(trainLosses);
-              avgTestLoss = mean(testLosses);
-              avgPrecision = mean(precisions);
-              avgAccuracy = mean(accuracies);
-              avgRecall = mean(recalls);
-              avgF1 = mean(f1s);
-              resultsTable.appendResult(trainValidateProportion, maxNumSplit, ...
-                                       splitCriterion, numberOfHoldOutRun, ...
-                                       avgTrainLoss, avgTestLoss, ...
-                                       avgAccuracy, avgPrecision, avgRecall, avgF1, ...
-                                       size(yTest, 1), endTime - startTime);
-            end % numberOfHoldOutRun
-          end % splitCriterion
-        end % maxNumSplit
-      end % trainValidateProportion
+      for minLeafSize = hyperparameters.minLeafSizes
+        for minParentSize = hyperparameters.minParentSizes
+          for maxNumSplit = hyperparameters.maxNumSplits
+            for splitCriterion = hyperparameters.splitCriteria
+              for numberOfFold = hyperparameters.numberOfFolds
+                % repeat fold partition creation, build tree, predict this
+                % number of times to get average:
+                startTime = cputime; 
+                predictTimes = zeros(1, numberOfFold);
+                trainLosses = zeros(1, numberOfFold);
+                testLosses = zeros(1, numberOfFold);
+                accuracies = zeros(1, numberOfFold);
+                precisions = zeros(1, numberOfFold);
+                recalls = zeros(1, numberOfFold);
+                f1s = zeros(1, numberOfFold);
+                LossIndex = 1;
+                for foldTestRunCount = 1:numberOfFold
+                  % calculate train and test subset indeces
+                  partition = cvpartition(numExamples, 'Holdout', 0.2);
+                  trainSubsetIdx = training(partition);
+                  testSubsetIdx = test(partition);
+                  [x, y] = obj.dataset.extractXYFromTable(obj.dataset.trainTable);
+                  % extract train and test subsets
+                  xTrain = x(trainSubsetIdx, :);
+                  yTrain = y(trainSubsetIdx, :);
+                  xTest = x(testSubsetIdx, :);
+                  yTest = y(testSubsetIdx, :);
+                  [trainLoss, testLoss, misclassifiedCount, ...
+                      accuracy, ...
+                      precision, recall, f1, predictTime] ...
+                  = obj.buildAndTestTree(xTrain, ...
+                                        yTrain, xTest, yTest, ...
+                                        minLeafSize, minParentSize, ...
+                                        splitCriterion, maxNumSplit, classNames);
+                  trainLosses(LossIndex) =trainLoss;
+                  testLosses(LossIndex) =testLoss;
+                  accuracies(LossIndex) = accuracy;
+                  precisions(LossIndex) = precision;
+                  recalls(LossIndex) = recall;
+                  f1s(LossIndex) = f1;
+                  predictTimes(LossIndex) = predictTime;
+                  LossIndex = LossIndex + 1;
+                end % foldTestRunCount
+                endTime = cputime;
+                avgTrainLoss = mean(trainLosses);
+                avgTestLoss = mean(testLosses);
+                avgPrecision = mean(precisions);
+                avgAccuracy = mean(accuracies);
+                avgRecall = mean(recalls);
+                avgF1 = mean(f1s);
+                resultsTable.appendResult(minLeafSize, minParentSize, maxNumSplit, ...
+                                         splitCriterion, numberOfFold, ...
+                                         avgTrainLoss, avgTestLoss, ...
+                                         avgAccuracy, avgPrecision, avgRecall, avgF1, ...
+                                         size(yTest, 1), endTime - startTime, mean(predictTimes));
+              end % numberOfFold
+            end % splitCriterion
+          end % maxNumSplit
+        end % minParentSize
+      end % minLeafSize
       resultsTable.endGatheringResults();
       letterDecisionTreeResults = resultsTable;
       fprintf("Completed decision tree analysis\n");
@@ -121,34 +126,38 @@ classdef LetterDecisionTreeClass < handle
       classNames = categorical(table2array(obj.dataset.validClassValues));
       resultsTable = LetterDecisionTreeResults(resultsFinalCsvFilename);
       resultsTable.startGatheringResults();
-      for maxNumSplit = hyperparameters.maxNumSplits
-        for splitCriterion = hyperparameters.splitCriteria
-          for numberOfHoldOutRun = hyperparameters.numberOfHoldOutRuns
-            startTime = cputime; 
-            % create train and test sets from complete dataset
-            % extract train and test sets
-            [x, y] = obj.dataset.extractXYFromTable(obj.dataset.trainTable);
-            xTrain = x;
-            yTrain = y;
-            [x, y] = obj.dataset.extractXYFromTable(obj.dataset.testTable);
-            xTest = x;
-            yTest = y;
-            trainValidateProportion = size(yTrain) / (size(yTrain ) + size(yTest));
-            [trainLoss, testLoss, misclassifiedCount, ...
-              accuracy, ...
-              precision, recall, f1] = obj.buildAndTestTree(xTrain, ...
-                                  yTrain, xTest, yTest, ...
-                                  splitCriterion, maxNumSplit, classNames);
-            endTime = cputime;
-            resultsTable.appendResult(trainValidateProportion, maxNumSplit, ...
-                                     splitCriterion, 1, ...
-                                     trainLoss, testLoss, ...
-                                     accuracy, ...
-                                      precision, recall, f1, ...
-                                   size(yTest, 1), endTime - startTime);
-          end
-        end
-      end
+      for minLeafSize = hyperparameters.minLeafSizes
+        for minParentSize = hyperparameters.minParentSizes
+          for maxNumSplit = hyperparameters.maxNumSplits
+            for splitCriterion = hyperparameters.splitCriteria
+              for numberOfFold = hyperparameters.numberOfFolds
+                startTime = cputime; 
+                % create train and test sets from complete dataset
+                % extract train and test sets
+                [x, y] = obj.dataset.extractXYFromTable(obj.dataset.trainTable);
+                xTrain = x;
+                yTrain = y;
+                [x, y] = obj.dataset.extractXYFromTable(obj.dataset.testTable);
+                xTest = x;
+                yTest = y;
+                [trainLoss, testLoss, misclassifiedCount, ...
+                  accuracy, ...
+                  precision, recall, f1, predictTime] = obj.buildAndTestTree(xTrain, ...
+                                      yTrain, xTest, yTest, ...
+                                      minLeafSize, minParentSize, ...
+                                      splitCriterion, maxNumSplit, classNames);
+                endTime = cputime;
+                resultsTable.appendResult(minLeafSize, minParentSize, maxNumSplit, ...
+                                         splitCriterion, 1, ...
+                                         trainLoss, testLoss, ...
+                                         accuracy, ...
+                                          precision, recall, f1, ...
+                                       size(yTest, 1), endTime - startTime, predictTime);
+              end % numberOfFold
+            end % splitCriteria
+          end % maxNumSplits
+        end % minParentSize
+      end % minLeafSize
       resultsTable.endGatheringResults();
       letterDecisionTreeResults = resultsTable;
       fprintf("Completed final decision tree analysis\n");
@@ -163,9 +172,10 @@ classdef LetterDecisionTreeClass < handle
     %   yTest are the expected results.
     %
     function [trainingLoss, testLoss, misclassifiedCount, accuracy, ...
-              precision, recall, f1] = ...
+              precision, recall, f1, predictTime] = ...
             buildAndTestTree(obj, ...
                               xTrain, yTrain, xTest, yTest, ...
+                              minLeafSize, minParentSize, ...
                               splitCriterion, maxNumSplit, classNames)
       % Grow the decision tree using the training subset
       treeModel = fitctree( ...
@@ -174,9 +184,13 @@ classdef LetterDecisionTreeClass < handle
           'SplitCriterion', splitCriterion, ...
           'MaxNumSplits', maxNumSplit, ...
           'Surrogate', 'off', ...
+          'MinLeafSize', minLeafSize,...
+          'MinParentSize', minParentSize,...
           'ClassNames', classNames); 
       % predict
+      startTime = cputime;
       [predictionResult, nodeNumbers] = predict(treeModel, xTest);
+      predictTime = cputime - startTime;
       % errors
       yTestArray = table2array(yTest);
       misclassifiedCount = sum(predictionResult ~= categorical(yTestArray));

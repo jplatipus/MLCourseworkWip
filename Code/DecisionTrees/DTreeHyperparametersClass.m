@@ -8,9 +8,10 @@ classdef DTreeHyperparametersClass
   
   properties
       randomSeed = 110;
-      numberOfHoldOutRuns = [1 5 10 15 20];
-      trainValidateProportions = [0.8, 0.7];
-      maxNumSplits = [25, 100, 400, 800, 1600];
+      numberOfFolds = [2 3 5];
+      minLeafSizes = [1 3 5 7];
+      minParentSizes = [6 8 10 12 14];
+      maxNumSplits = [25, 100, 150, 200, 400, 800, 1600];
       splitCriteria = ["gdi", "twoing", "deviance"];
       classNames = {};
   end % properties
@@ -41,8 +42,9 @@ classdef DTreeHyperparametersClass
     %
     function hyperparameters = getQuickTestRunInstance()
       hyperparameters = DTreeHyperparametersClass();
-      hyperparameters.numberOfHoldOutRuns = [2, 5];
-      hyperparameters.trainValidateProportions = [0.2];
+      hyperparameters.numberOfFolds = [2, 3];
+      hyperparameters.minLeafSizes = [1 3];
+      hyperparameters.minParentSizes = [12 14];      
       hyperparameters.maxNumSplits = [100];
       hyperparameters.splitCriteria = ["gdi"];      
     end
@@ -54,8 +56,7 @@ classdef DTreeHyperparametersClass
     function hyperparameters = getDevianceSplitCriteriaInstance()
       hyperparameters = DTreeHyperparametersClass();
       hyperparameters.randomSeed = 112;
-      hyperparameters.numberOfHoldOutRuns = [1 10 20];
-      hyperparameters.trainValidateProportions = [0.8];
+      hyperparameters.numberOfFolds = [2 3 5];
       hyperparameters.maxNumSplits = [50, 100, 200, 300, 350, 400, 450, 500, 550, 600, 800, 1000];
       hyperparameters.splitCriteria = ["deviance"];      
     end
@@ -66,9 +67,7 @@ classdef DTreeHyperparametersClass
       hyperparameters.maxNumSplits = [50, 100, 150 175 200, 225 250 275 300, 350 400 450 500 550 600 700 800 1000];
       hyperparameters.splitCriteria = ["deviance"]; 
       % unused: train and test sets are used on the whole dataset instead:
-      hyperparameters.numberOfHoldOutRuns = [-1];
-      % unused: train and test sets are used on the whole dataset instead:
-      hyperparameters.trainValidateProportions = [-1];       
+      hyperparameters.numberOfFolds = [-1];      
     end
     
     
