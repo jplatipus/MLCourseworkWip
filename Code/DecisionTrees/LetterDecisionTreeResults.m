@@ -8,7 +8,7 @@ classdef LetterDecisionTreeResults < handle
       "maxNumSplit", "splitCriterion", ...
       "avgTrainLoss", "avgTestLoss", ...
       "avgAccuracy", "avgPrecision", "avgRecall", "avgF1", ...
-      "entryCount", "elapsedTime", "predictTime"];
+      "entryCount", "elapsedTime", "predictTime", "randomSeed"];
         % temporary file to store the results:
     outputResultsFilename = "dtreeResultsFilenameNotSet.csv";
     fileHandle = -1;
@@ -37,13 +37,13 @@ classdef LetterDecisionTreeResults < handle
        end
        % output header
        obj.fileHandle = h;
-       fprintf(obj.fileHandle, "%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n", obj.resultsColumnNames(:));
+       fprintf(obj.fileHandle, "%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n", obj.resultsColumnNames(:));
     end
     
     function appendResult(obj, minLeafSize, minParentSize, maxNumSplit, splitCriterion, ...
                   numberOfFolds, avgTrainLoss, avgTestLoss, ...
                   avgAccuracy, avgPrecision, avgRecall, avgF1, ...
-                  entryCount, elapsedTime, predictTime)
+                  entryCount, elapsedTime, predictTime, randomSeed)
       if obj.fileHandle == -1
         exception = MException("LetterDecisionTreeResults:appendResult", "Error output file %s is not open", obj.outputResultsTempFilename);
         throw(exception);
@@ -51,11 +51,11 @@ classdef LetterDecisionTreeResults < handle
       fprintf(obj.fileHandle, "%d\t%d\t%d\t"+...
                               "%d\t%s\t%0.04f\t%0.04f\t"+...
                               "%0.04f\t%0.04f\t%0.04f\t%0.04f\t"+...
-                              "%d\t%0.04f\t%0.04f\n", ...
+                              "%d\t%0.04f\t%0.04f\t%d\n", ...
                numberOfFolds, minLeafSize, minParentSize, ...
                maxNumSplit, splitCriterion, avgTrainLoss, avgTestLoss,  ...
               avgAccuracy, avgPrecision, avgRecall, avgF1, ...
-              entryCount, elapsedTime, predictTime);
+              entryCount, elapsedTime, predictTime, randomSeed);
     end
     
     function endGatheringResults(obj)
@@ -98,9 +98,14 @@ classdef LetterDecisionTreeResults < handle
       box(axes1,'on');
       hold(axes1,'off');
       % Create legend
-      legend1 = legend(axes1,'show');
-      set(legend1,...
-      'Position',[0.139097200877803 0.799736733387832 0.190114065664802 0.0999999973009218]);
+      legend1 = legend(axes1,'show', 'Location','northeastoutside');
+      %set(legend1,...
+      %'Position',[0.139097200877803 0.799736733387832 0.190114065664802 0.0999999973009218]);
+      % make it bigger to display figures:
+      fig_Position = figure1.Position;
+      fig_Position(3) = fig_Position(3)*1.5;
+      fig_Position(4) = fig_Position(4)*1.5;
+      figure1.Position = fig_Position;    
     end
   end % methods
   

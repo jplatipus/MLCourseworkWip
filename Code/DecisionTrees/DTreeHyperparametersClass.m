@@ -7,13 +7,18 @@ classdef DTreeHyperparametersClass
   %
   
   properties
-      randomSeed = 110;
-      numberOfFolds = [2 3 5];
-      minLeafSizes = [1 3 5 7];
-      minParentSizes = [6 8 10 12 14];
-      maxNumSplits = [25, 100, 150, 200, 400, 800, 1600];
-      splitCriteria = ["gdi", "twoing", "deviance"];
-      classNames = {};
+    % default random stream initial value
+    randomSeed = 300;
+    % random stream used by default
+    defaultRandomStream;
+    % random stream used when training naive bayes
+    dTreeRandomStream;      
+    numberOfFolds = [2 3 5];
+    minLeafSizes = [1 3 5 7];
+    minParentSizes = [6 8 10 12 14];
+    maxNumSplits = [25, 100, 150, 200, 400, 800, 1600];
+    splitCriteria = ["gdi", "twoing", "deviance"];
+    classNames = {};
   end % properties
   
   methods
