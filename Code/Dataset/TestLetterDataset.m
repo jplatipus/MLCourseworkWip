@@ -1,21 +1,26 @@
-%% Test the dataset class:
-% loads the dataset and checks the dimensions of the data are
+%% Create the dataset class instances:
+% loads the dataset csv file and checks the dimensions of the data are
 % as expected.
 %
-% Displays all the plots coded for this dataset class.
-%
+% Creates 3 workspace variables that should be saved into
+% letterDatasetClass.mat:
+% - letterDatasetNotNormalised: the original data 
+% - letterDatasetNormalised: the data normalised using z-score
+%                             normalisation
+% - letterDatasetNormalisedReducedFeatures: also normalised, highly
+%                             correlated features removed.
 clear
 clc
 clf
 close all
 letterDatasetNotNormalised = LetterDatasetClass(false);
-letterDatasetStandardised = LetterDatasetClass(true);
-letterDatasetStandardisedReducedFeatures = LetterDatasetClass(true);
-letterDatasetStandardisedReducedFeatures.removeColumn("xBox");
-letterDatasetStandardisedReducedFeatures.removeColumn("yBox");
-letterDatasetStandardisedReducedFeatures.removeColumn("width");
-letterDatasetStandardisedReducedFeatures.removeColumn("height");
-letterDatasets = [letterDatasetNotNormalised letterDatasetStandardised letterDatasetStandardisedReducedFeatures];
+letterDatasetNormalised = LetterDatasetClass(true);
+letterDatasetNormalisedReducedFeatures = LetterDatasetClass(true);
+letterDatasetNormalisedReducedFeatures.removeColumn("xBox");
+letterDatasetNormalisedReducedFeatures.removeColumn("yBox");
+letterDatasetNormalisedReducedFeatures.removeColumn("width");
+letterDatasetNormalisedReducedFeatures.removeColumn("height");
+letterDatasets = [letterDatasetNotNormalised letterDatasetNormalised letterDatasetNormalisedReducedFeatures];
 
 %% Display dataset analysis for both datasets: plots should be the same for 
 % for both, console outputs min median and max are different for the
@@ -32,8 +37,8 @@ end
 
 function checkDataset(letterDataset, expectedTrainExamples, expectedTestExamples, expectedAttributes)
   normText = "(~normalised";
-  if letterDataset.isStandardised
-    normText = "(standardised";
+  if letterDataset.isNormalised
+    normText = "(normalised";
   end
   if letterDataset.isRemovedFeature
     normText = normText + ", feature selection";

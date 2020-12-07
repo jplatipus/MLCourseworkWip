@@ -89,8 +89,8 @@ classdef LetterDecisionTreeResults < handle
         'Color',[0.3010 0.7450 0.9330]);
       
       % Uncomment the following line to preserve the X-limits of the axes
-      xlim(axes1,[0.0 1.0]);
-      ylim(axes1,[0.0 1.0]);
+      xlim(axes1,[0.0 0.2]);
+      ylim(axes1,[0.0 0.2]);
       grid on
       xlabel("Avg. Train Loss");
       ylabel("Avg. Test Loss");

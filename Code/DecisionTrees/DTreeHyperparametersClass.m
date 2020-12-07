@@ -14,9 +14,9 @@ classdef DTreeHyperparametersClass
     % random stream used when training naive bayes
     dTreeRandomStream;      
     numberOfFolds = [2 3 5];
-    minLeafSizes = [1 3 5 7];
-    minParentSizes = [6 8 10 12 14];
-    maxNumSplits = [25, 100, 150, 200, 400, 800, 1600];
+    minLeafSizes = [1 3 5];
+    minParentSizes = [6 8 10];
+    maxNumSplits = [4000, 8000, 10000];
     splitCriteria = ["gdi", "twoing", "deviance"];
     classNames = {};
   end % properties
@@ -62,14 +62,15 @@ classdef DTreeHyperparametersClass
       hyperparameters = DTreeHyperparametersClass();
       hyperparameters.randomSeed = 112;
       hyperparameters.numberOfFolds = [2 3 5];
-      hyperparameters.maxNumSplits = [50, 100, 200, 300, 350, 400, 450, 500, 550, 600, 800, 1000];
       hyperparameters.splitCriteria = ["deviance"];      
     end
     
     function hyperparameters = getFinalHyperparameterInstance()
       hyperparameters = DTreeHyperparametersClass();
-      hyperparameters.randomSeed = 250;
-      hyperparameters.maxNumSplits = [50, 100, 150 175 200, 225 250 275 300, 350 400 450 500 550 600 700 800 1000];
+      hyperparameters.randomSeed = 192;
+      hyperparameters.minLeafSizes = [1];
+      hyperparameters.minParentSizes = [6];
+      hyperparameters.maxNumSplits = [8000];
       hyperparameters.splitCriteria = ["deviance"]; 
       % unused: train and test sets are used on the whole dataset instead:
       hyperparameters.numberOfFolds = [-1];      

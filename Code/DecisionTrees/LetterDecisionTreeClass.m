@@ -56,10 +56,11 @@ classdef LetterDecisionTreeClass < handle
       classNames = categorical(table2array(obj.dataset.validClassValues));
       resultsTable = LetterDecisionTreeResults(resultsCsvFilename);
       resultsTable.startGatheringResults();
-      for minLeafSize = hyperparameters.minLeafSizes
-        for minParentSize = hyperparameters.minParentSizes
-          for maxNumSplit = hyperparameters.maxNumSplits
-            for splitCriterion = hyperparameters.splitCriteria
+      rowNumber = 1;
+      for splitCriterion = hyperparameters.splitCriteria
+        for maxNumSplit = hyperparameters.maxNumSplits
+          for minLeafSize = hyperparameters.minLeafSizes
+            for minParentSize = hyperparameters.minParentSizes
               for numberOfFold = hyperparameters.numberOfFolds
                 % repeat fold partition creation, build tree, predict this
                 % number of times to get average:
@@ -85,11 +86,11 @@ classdef LetterDecisionTreeClass < handle
                   yTest = y(testSubsetIdx, :);
                   [trainLoss, testLoss, misclassifiedCount, ...
                       accuracy, ...
-                      precision, recall, f1, predictTime] ...
+                      precision, recall, f1, predictTime, model] ...
                     = obj.buildAndTestTree(xTrain, ...
                                         yTrain, xTest, yTest, ...
                                         minLeafSize, minParentSize, ...
-                                        splitCriterion, maxNumSplit, classNames, numberOfFold);
+                                        splitCriterion, maxNumSplit, classNames, rowNumber);
                   trainLosses(LossIndex) =trainLoss;
                   testLosses(LossIndex) =testLoss;
                   accuracies(LossIndex) = accuracy;
@@ -111,12 +112,13 @@ classdef LetterDecisionTreeClass < handle
                                          avgTrainLoss, avgTestLoss, ...
                                          avgAccuracy, avgPrecision, avgRecall, avgF1, ...
                                          size(yTest, 1), endTime - startTime,... 
-                                         mean(predictTimes), numberOfFold);
+                                         mean(predictTimes), rowNumber);
+                rowNumber = rowNumber + 1;
               end % numberOfFold
-            end % splitCriterion
-          end % maxNumSplit
-        end % minParentSize
-      end % minLeafSize
+            end % minParentSize
+          end % minLeafSize
+        end % splitCriterion
+      end % maxNumSplit
       resultsTable.endGatheringResults();
       letterDecisionTreeResults = resultsTable;
       fprintf("Completed decision tree analysis\n");
@@ -124,47 +126,46 @@ classdef LetterDecisionTreeClass < handle
 
     %%
     % Perform final analysis, usimng the previously unseen dataset
-    function [letterDecisionTreeResults] = performFinalDTreeHyperparameterAnalysis(obj, hyperparameters, resultsFinalCsvFilename)
+    function [letterDecisionTreeResults, dTreeModel, predictionResult] = performFinalDTreeHyperparameterAnalysis(obj, hyperparameters, resultsFinalCsvFilename)
             fprintf("Starting final decision tree analysis...\n");
-      rng(hyperparameters.randomSeed);
       % unique set of values that can appear in the predicted results:
       classNames = categorical(table2array(obj.dataset.validClassValues));
       resultsTable = LetterDecisionTreeResults(resultsFinalCsvFilename);
       resultsTable.startGatheringResults();
-      for minLeafSize = hyperparameters.minLeafSizes
-        for minParentSize = hyperparameters.minParentSizes
-          for maxNumSplit = hyperparameters.maxNumSplits
-            for splitCriterion = hyperparameters.splitCriteria
-              for numberOfFold = hyperparameters.numberOfFolds
-                startTime = cputime; 
-                % create train and test sets from complete dataset
-                % extract train and test sets
-                [x, y] = obj.dataset.extractXYFromTable(obj.dataset.trainTable);
-                xTrain = x;
-                yTrain = y;
-                [x, y] = obj.dataset.extractXYFromTable(obj.dataset.testTable);
-                xTest = x;
-                yTest = y;
-                [trainLoss, testLoss, misclassifiedCount, ...
-                  accuracy, ...
-                  precision, recall, f1, predictTime] = obj.buildAndTestTree(xTrain, ...
-                                      yTrain, xTest, yTest, ...
-                                      minLeafSize, minParentSize, ...
-                                      splitCriterion, maxNumSplit, classNames,...
-                                      numberOfFold);
-                endTime = cputime;
-                resultsTable.appendResult(minLeafSize, minParentSize, maxNumSplit, ...
-                                         splitCriterion, 1, ...
-                                         trainLoss, testLoss, ...
-                                         accuracy, ...
-                                          precision, recall, f1, ...
-                                       size(yTest, 1), endTime - startTime, predictTime,...
-                                       numberOfFold);
-              end % numberOfFold
-            end % splitCriteria
-          end % maxNumSplits
-        end % minParentSize
-      end % minLeafSize
+      rowNumber = 1;
+      for maxNumSplit = hyperparameters.maxNumSplits
+        for splitCriterion = hyperparameters.splitCriteria
+          for minLeafSize = hyperparameters.minLeafSizes
+            for minParentSize = hyperparameters.minParentSizes
+              startTime = cputime; 
+              % create train and test sets from complete dataset
+              % extract train and test sets
+              [x, y] = obj.dataset.extractXYFromTable(obj.dataset.trainTable);
+              xTrain = x;
+              yTrain = y;
+              [x, y] = obj.dataset.extractXYFromTable(obj.dataset.testTable);
+              xTest = x;
+              yTest = y;
+              [trainLoss, testLoss, misclassifiedCount, ...
+                accuracy, ...
+                precision, recall, f1, predictTime, dTreeModel, predictionResult] = obj.buildAndTestTree(xTrain, ...
+                                    yTrain, xTest, yTest, ...
+                                    minLeafSize, minParentSize, ...
+                                    splitCriterion, maxNumSplit, classNames,...
+                                    hyperparameters.randomSeed);
+              endTime = cputime;
+              resultsTable.appendResult(minLeafSize, minParentSize, maxNumSplit, ...
+                                       splitCriterion, 1, ...
+                                       trainLoss, testLoss, ...
+                                       accuracy, ...
+                                        precision, recall, f1, ...
+                                     size(yTest, 1), endTime - startTime, predictTime,...
+                                     hyperparameters.randomSeed);
+              rowNumber = rowNumber + 1;
+            end % minParentSize
+          end % minLeafSize
+        end % splitCriteria
+      end % maxNumSplits
       resultsTable.endGatheringResults();
       letterDecisionTreeResults = resultsTable;
       fprintf("Completed final decision tree analysis\n");
@@ -179,7 +180,7 @@ classdef LetterDecisionTreeClass < handle
     %   yTest are the expected results.
     %
     function [trainingLoss, testLoss, misclassifiedCount, accuracy, ...
-              precision, recall, f1, predictTime] = ...
+              precision, recall, f1, predictTime, treeModel, predictionResult] = ...
             buildAndTestTree(obj, ...
                               xTrain, yTrain, xTest, yTest, ...
                               minLeafSize, minParentSize, ...

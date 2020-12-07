@@ -18,9 +18,9 @@ classdef LetterDatasetClass < handle
       trainTable = {};
       % random test examples:
       testTable = {};
-      % flag indicating if the dataset has been standardised: 
+      % flag indicating if the dataset has been normalised: 
       % (Center and scale to have mean 0 and standard deviation 1)
-      isStandardised = false;
+      isNormalised = false;
       % has some features been removed
       isRemovedFeature = false;
     end % properties
@@ -30,7 +30,7 @@ classdef LetterDatasetClass < handle
         % Public
         % Constructor: load dataset, split data into class members (tables)
         %
-        function obj = LetterDatasetClass(standardised)
+        function obj = LetterDatasetClass(normalised)
           %Load file: 
           obj.datasetContentsAsTable = readtable(obj.datasetFilePath, 'Delimiter', ',');
           
@@ -48,8 +48,8 @@ classdef LetterDatasetClass < handle
           obj.trainTable.Properties.VariableNames = [obj.targetName, obj.featureNames];
           obj.testTable.Properties.VariableNames = [obj.targetName, obj.featureNames];
           obj.datasetContentsAsTable.Properties.VariableNames = [obj.targetName, obj.featureNames];
-          % normalise using zscore standardization?
-          if standardised
+          % normalise the data using zscore standardization?
+          if normalised
             obj.performStandardization();
           end
         end
@@ -70,27 +70,27 @@ classdef LetterDatasetClass < handle
         % Normalizes the dataset trainTable and testTable. The test table
         % is normalised using the train table so as to avoid leakage into
         % the test set.
-        % The member isStandardised reflects whether the train table and
+        % The member isNormalised reflects whether the train table and
         % test table have been normalised
         % algorithm used in the normalization is:
         % - zscore normalization
         % On exit the members trainTable and testTable have been
-        % standardised
+        % normalised
         function performStandardization(obj)
           % claculate training mean and std dev
           trainingMeans = mean(table2array(obj.trainTable(:,2:end)));
           trainingStdDevs = std(table2array(obj.trainTable(:,2:end)));
-          % standardise training table
+          % normalise training table
           zvalues = (table2array(obj.trainTable(:,2:end)) - trainingMeans) ./ trainingStdDevs;
           zTable = obj.trainTable;
           zTable(:,2:end) = array2table(zvalues);
           obj.trainTable = zTable;        
-          % standardise test table
+          % normalise test table
           zvalues = (table2array(obj.testTable(:,2:end)) - trainingMeans) ./ trainingStdDevs;
           zTable = obj.testTable;
           zTable(:,2:end) = array2table(zvalues);
           obj.testTable = zTable;
-          obj.isStandardised = true;
+          obj.isNormalised = true;
         end % performNormalization
         
         %
@@ -110,8 +110,8 @@ classdef LetterDatasetClass < handle
         % Display dataset summary information 
         function displayDatasetInformation(obj)
           normText = "(~normalised)";
-          if obj.isStandardised
-            normText = "(standardised)";
+          if obj.isNormalised
+            normText = "(normalised)";
           end
           disp(obj);
           disp("Training Table Summary:");
@@ -122,8 +122,8 @@ classdef LetterDatasetClass < handle
         % Display plots of the dataset
         function displayDatasetPlots(obj)
           normText = "(~normalised)";
-          if obj.isStandardised
-            normText = "(standardised)";
+          if obj.isNormalised
+            normText = "(normalised)";
           end
           %% Display sample's target values distribution to confirm it is equally distributed:
           obj.plotLetterDistribution(obj.trainTable, "Distribution of Classes " + normText);
@@ -139,7 +139,7 @@ classdef LetterDatasetClass < handle
         % Display correlation of training data as two heatmaps:
         % - A Pearson correlation of the attribute values is displayed
         % - A correlation of the null hypothesis p-values is displayed
-        % make use of heatmap found on Matlab's fileexchange:
+        % makes use of heatmap found on Matlab's fileexchange:
         % Ameya Deoras (2020). Customizable Heat Maps (https://www.mathworks.com/matlabcentral/fileexchange/24253-customizable-heat-maps), MATLAB Central File Exchange. Retrieved November 2, 2020.
         %
         function displayCorrelation(obj, datasetTable, plotTitle)
@@ -170,7 +170,7 @@ classdef LetterDatasetClass < handle
         %
         function displayScatterMatrix(obj, datasetTable, plotTitle)
           [x, y] = obj.extractXYFromTable(datasetTable);
-          figure("Name", plotTitle);
+          fig = figure("Name", plotTitle);
           mat = table2array(x);
           targetMat = table2array(y);
           xnames = obj.featureNames;
@@ -180,6 +180,7 @@ classdef LetterDatasetClass < handle
           title(plotTitle);
           xsize = size(x);
           numFeatures = xsize(1,2);
+          legend1 = legend(bigax,'show', 'Location','northeastoutside');
           % Align scatterplot labels, remove tick labels
           for xy = 1:numFeatures
             ax(numFeatures, xy).XLabel.Rotation = 45;
@@ -189,6 +190,11 @@ classdef LetterDatasetClass < handle
             ax(numFeatures, 1).YTickLabel = [''];
             ax(numFeatures, 1).YLabel.HorizontalAlignment = 'right';
           end
+          fig_Position = fig.Position;
+          % make it bigger to display figures:
+          fig_Position(3) = fig_Position(3)*1.5;
+          fig_Position(4) = fig_Position(4)*1.5;
+          fig.Position = fig_Position;
         end
         
         %
