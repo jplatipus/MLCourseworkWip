@@ -1,4 +1,0 @@
-distributionName	smootherType	Width	numberOfFolds	randomNBayesSeed	avgTrainLoss	avgTestLoss	avgAccuracy	avgPrecision	avgRecall	avgF1	entryCount	elapsedTime	avgPredictTime
-kernel	normal	0.20000000	2	2	0.2433	0.2526	0.7463	0.7467	0.7608	0.7537	3200	307.2400	27.1350
-kernel	normal	0.18000000	2	2	0.2424	0.2488	0.7506	0.7507	0.7667	0.7586	3200	260.8800	21.7400
-kernel	normal	0.13000000	2	2	0.2343	0.2517	0.7470	0.7479	0.7633	0.7555	3200	217.4600	18.1750

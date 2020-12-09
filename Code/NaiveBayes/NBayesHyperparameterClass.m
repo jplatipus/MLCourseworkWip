@@ -168,7 +168,7 @@ classdef NBayesHyperparameterClass < handle
       % rows of widths to go with distribution names rows. So if a
       % distribution row is normal, it should be -1 (no width), a number
       % otherwise
-      hyperparameters.kernelWidths = [0.13 0.12 0.11 0.10 0.098351 0.0932 0.090 0.80];
+      hyperparameters.kernelWidths = [0.20 0.18 0.13 0.12 0.11 0.10 0.090 0.80];
     end
     
     % get MATLAB's default 'normal' instance. Widths are not used

@@ -102,18 +102,20 @@ classdef NBayesClass < handle
       prior = prior + 1/26;
     end
     
-    % Perform matlab's hyperparameter optimization search
+    % Perform matlab's hyperparameter optimization search.
+    % sets the prior distribution to empirical
     function nBayesModel = fitMatlabHyperparameterOptimization(obj)
       obj.nBayesModel = fitcnb(obj.x, obj.y, ...
         'ClassNames', categorical(table2array(obj.dataset.validClassValues)), ...
         'OptimizeHyperparameters','auto',...
         'HyperparameterOptimizationOptions',struct('AcquisitionFunctionName',...
-        'expected-improvement-plus'));
+        'expected-improvement-plus'), ...
+        'Prior', obj.getPriorDistributionEmpirical());
       nBayesModel = obj.nBayesModel;
     end % function
 
     %
-    % Perform a 'manual' hold out cross validation hyperparameter search,
+    % Perform a 'manual' nfold cross validation with replacement hyperparameter search,
     % using the different hyperparameter values supplied in
     % hyperparameters.
     % writes the results to the csv file (tab delimitted), and returns the
@@ -128,11 +130,12 @@ classdef NBayesClass < handle
       resultsTable = NBayesResults(resultsCsvFilename);
       resultsTable.startGatheringResults();  
       % for gaussian kernel distribution, we can specify a prior
-      % distribution of classes. This test uses normal and emprirical
+      % distribution of classes. This test uses emprirical
       % (based on the training set distribution):
       priorDistributions = obj.getPriorDistributionEmpirical(); %, ...
                       % obj.getPriorDistributionNormal()];
       cellsIndex = 1;
+      resultRow = 1;
       for distributionNameCells = hyperparameters.distributionNames 
         for numberOfFolds = hyperparameters.numberOfFolds       
           for priorDistribution = priorDistributions
@@ -179,13 +182,15 @@ classdef NBayesClass < handle
                   end
                   fprintf('\n');
                 end %obj.debug;
+                % uses the result row as the random seed, so that each fold
+                % uses the same random seed when fitting the model.
                 [trainingLoss, testLoss, misclassifiedCount, ...
                     distributionName, smootherTypeName, model, ...
                     accuracy, precision, recall, ...
                     f1, predictTime] =...
                   obj.buildAndTestNBayes(xTrain, yTrain, xTest, yTest, ...
                     distributionNameCells, smootherType, priorDistribution, width, ...
-                    classNames, foldCount);
+                    classNames, resultRow);
                 accuracies(foldCount) = accuracy;
                 precisions(foldCount) = precision;
                 recalls(foldCount) = recall;
@@ -203,15 +208,15 @@ classdef NBayesClass < handle
               avgRecall = mean(recalls);
               avgF1 = mean(f1s);
               avgPredictTime = mean(predictTimes);
-              % use number of folds so that each train uses the same random
-              % seed
+              % Uses the result row number as the random seed when training
+              % the naive bayes model.
               resultsTable.appendResult(distributionName, smootherTypeName, ...
-                                 width, numberOfFolds, numberOfFolds, ...
+                                 width, numberOfFolds, resultRow, ...
                                  avgTrainLoss, avgTestLoss, ...
                                  avgAccuracy, avgPrecision, avgRecall, avgF1, ...
                                  size(yTest, 1), ...
                                  endTime - startTime, avgPredictTime);
-             
+              resultRow = resultRow + 1;
           end % priorDistribution
         end % numberOfFolds  
         cellsIndex = cellsIndex + 1;
@@ -320,6 +325,7 @@ classdef NBayesClass < handle
     end
     
     % build final Naive Bayes model
+    % returns the trained model and the cpu time taken to do this.
     function [nBayes, trainTime] = buildFinalNBayes(distributionNames, ...
         smootherTypes, width, nBayesRandomSeed, classNames, xTrain, yTrain)
       % calculate prior distribution of classes based on training dataset

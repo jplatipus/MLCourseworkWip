@@ -39,6 +39,7 @@ classdef LetterDatasetClass < handle
           %Split dataset into train and test sets
           rng(obj.randomSeed);
           exampleCount = size(obj.datasetContentsAsTable, 1);
+          
           partition = cvpartition(exampleCount, 'Holdout', obj.testSetProportion);
           idxTrain = training(partition);
           idxTest = test(partition);
