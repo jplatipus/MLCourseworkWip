@@ -1,4 +1,4 @@
-classdef FinalRFModel < handle
+classdef DeprecatedFinalRFModel < handle
   %FINALRFMODEL Summary of this class goes here
   %   Detailed explanation goes here
   
