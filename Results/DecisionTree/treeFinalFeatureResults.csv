@@ -1,2 +1,2 @@
 numberOfFolds	minLeafSize	minParentSize	maxNumSplit	splitCriterion	avgTrainLoss	avgTestLoss	avgAccuracy	avgPrecision	avgRecall	avgF1	entryCount	elapsedTime	predictTime	randomSeed
-1	1	6	8000	deviance	0.0361	0.1186	0.8805	0.8811	0.8821	0.8816	4000	0.5469	0.0625	192
+1	1	6	8000	deviance	0.0361	0.1186	0.8805	0.8811	0.8821	0.8816	4000	0.7656	0.0000	192
