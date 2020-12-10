@@ -1,0 +1,9 @@
+﻿isDatasetNormalised,empiricalPriorDistribution,isOptimizationSearch,initialDistributionType,TrainLoss,TestLoss,kernelWidth,fewerAttributes,approxCpuTime,totalTime
+no,no,no,normal,0.3539,0.3668,N/A,no,__,__
+no,yes,no,normal,0.3539,0.3678,N/A,no,__,__
+no,yes,yes,normal,0.2342,0.2508,0.25768,no,1462,6936
+yes,yes,no,normal,0.3549,0.3678,N/A,no,__,__
+yes,yes,yes,normal,0.2338,0.252,0.079584,no,1179,4842
+yes,yes,no,kernel,0.304,0.3212,N/A,no,__,__
+yes,yes,no,kernel,0.3059,0.3123,N/A,yes,__,__
+yes,yes,yes,kernel,0.235,0.2502,0.10116,yes,989,4585

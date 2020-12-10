@@ -1,0 +1,4 @@
+distributionName	smootherType	Width	numberOfFolds	randomNBayesSeed	avgTrainLoss	avgTestLoss	avgAccuracy	avgPrecision	avgRecall	avgF1	entryCount	elapsedTime	avgPredictTime
+normal	unused	-1.00000000	2	1	0.3415	0.3415	0.6564	0.6575	0.6664	0.6619	3200	2.1250	0.0625
+normal	unused	-1.00000000	3	2	0.3459	0.3402	0.6572	0.6591	0.6680	0.6635	3200	3.3281	0.1302
+normal	unused	-1.00000000	5	3	0.3465	0.3514	0.6479	0.6480	0.6556	0.6518	3200	5.3594	0.1437
