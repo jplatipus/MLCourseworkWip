@@ -1,6 +1,6 @@
 classdef RFHyperparameters < handle
-  %RFHYPERPARAMETERS Summary of this class goes here
-  %   Detailed explanation goes here
+  % Class stores the hyperparameter values that are used in the
+  % hyperparameter search.
   
   properties
     features = [2, 4, 6, 8, 10, 12];
@@ -12,15 +12,10 @@ classdef RFHyperparameters < handle
   methods
     function obj = RFHyperparameters()
     end % constructor
-    
-    function outputArg = method1(obj,inputArg)
-      %METHOD1 Summary of this method goes here
-      %   Detailed explanation goes here
-      outputArg = obj.Property1 + inputArg;
-    end % function
   end % methods
   
  methods(Static)
+   % create an instance for testing the code: few hyperparameters to try
    function rfHyperparameters = getHyperQuickInstance()
      rfHyperparameters = RFHyperparameters();
      rfHyperparameters.features = [2, 4];
@@ -28,21 +23,10 @@ classdef RFHyperparameters < handle
      rfHyperparameters.folds = [2, 3]
    end % function
   
+   % get the hyperparameter values that are used in the search
    function rfHyperparameters = getHyperDefaultInstance()
      rfHyperparameters = RFHyperparameters();
-   end % function
-   
-   % the hyperparameters to use for the final model are: 
-   % 200 trees, 
-   % 4 features, 
-   % 60 as the random seed.
-   function rfHyperparameters = getHyperparametersFinalInstance()
-     rfHyperparameters = RFHyperparameters();
-     rfHyperparameters.trees = 200;
-     rfHyperparameters.features = 4;
-     rfHyperparameters.randomSeed = 60;
-   end
-   
+   end % function  
  end % methods(Static)
 end % class
 

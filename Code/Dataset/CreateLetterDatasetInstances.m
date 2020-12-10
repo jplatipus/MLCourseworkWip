@@ -35,6 +35,10 @@ for letterDataset = letterDatasets
   checkDataset(letterDataset, expectedTrainExamples, expectedTestExamples, expectedAttributes)
 end
 
+% 
+% Checks the dataset examples in the trin and test are the correct size.
+% Displays dataset information: mean median and max of each feature.
+%
 function checkDataset(letterDataset, expectedTrainExamples, expectedTestExamples, expectedAttributes)
   normText = "(~normalised";
   if letterDataset.isNormalised
@@ -44,7 +48,8 @@ function checkDataset(letterDataset, expectedTrainExamples, expectedTestExamples
     normText = normText + ", feature selection";
   end
   normText = normText + ")";
-  fprintf("Dataset information %s\n", normText);
+  fprintf("\n\nDataset information %s:\n" + ...
+              "===================\n", normText);
   trainSize = size(letterDataset.trainTable);
   testSize = size(letterDataset.testTable);
   assert(trainSize(1) == expectedTrainExamples, "Expected the dataset training to contain " + expectedTrainExamples + " examples");
@@ -52,5 +57,6 @@ function checkDataset(letterDataset, expectedTrainExamples, expectedTestExamples
   assert(testSize(1) == expectedTestExamples, "Expected the dataset training to contain " + expectedTrainExamples + " examples");
   assert(testSize(2) == expectedAttributes, "Expected the dataset training to contain " + expectedAttributes + " attributes");
   letterDataset.displayDatasetInformation();
-  disp("The dataset " + normText + " was successfully created.");
+  fprintf("The dataset " + normText + " was successfully created.\n"+ ...
+          "______________________________________________________________");
 end

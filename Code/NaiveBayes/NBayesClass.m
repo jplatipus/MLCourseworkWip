@@ -1,7 +1,8 @@
 classdef NBayesClass < handle
   %% NBayesClass
   % contains the code to perform the initial automatic hyperparameter
-  % search, and the detailed hyperparameter search
+  % search, the detailed hyperparameter search, and for creating the final
+  % model.
   properties
     % default random stream initial value
     randomSeed = 300;
@@ -53,7 +54,9 @@ classdef NBayesClass < handle
     
     %% Constructor
     % Several getInstance static convenience methods use this constructor.
-    %
+    % Construct an instance with the given dataset. Creates two random
+    % streams: defaultRandomStream for partitioning the training data,
+    % nBayesRandomStream is used before fitting the model to the Naive Bayes method.
     function obj = NBayesClass(letterDataset)
       obj.dataset = letterDataset;
       obj.defaultRandomStream = RandStream('mt19937ar');
@@ -78,7 +81,7 @@ classdef NBayesClass < handle
         testLoss = loss(obj.nBayesModel, obj.xt, obj.yt);
     end
     
-    % Set the Matlab model's Prior distribution to reflect the dataset's
+    % Set the Matlab model's empirical prior distribution to reflect the dataset's
     % training distribution of classes.
     % Update nBayesModel and return it too
     function nBayesModel = setPriorDistributionEmpirical(obj)
@@ -88,22 +91,17 @@ classdef NBayesClass < handle
     end % function
     
     % calculate the dataset's
-    % training distribution of classes
+    % training empirical distribution of classes
     % returns a vector of the distributions for each class
     function prior = getPriorDistributionEmpirical(obj)
       Y = table2array(obj.y);
       freqDist = cell2table(tabulate(Y));
       prior = freqDist{:,3}/100;
     end
-    
-    % calculate a normal prior ditribution of classes for each class (1/26)
-    function prior = getPriorDistributionNormal(obj)
-      prior = zeros([26, 1]);
-      prior = prior + 1/26;
-    end
-    
+       
     % Perform matlab's hyperparameter optimization search.
     % sets the prior distribution to empirical
+    % returns the MATLAB model (also set in obj.nBayesModel)
     function nBayesModel = fitMatlabHyperparameterOptimization(obj)
       obj.nBayesModel = fitcnb(obj.x, obj.y, ...
         'ClassNames', categorical(table2array(obj.dataset.validClassValues)), ...
@@ -136,6 +134,7 @@ classdef NBayesClass < handle
                       % obj.getPriorDistributionNormal()];
       cellsIndex = 1;
       resultRow = 1;
+      % iterate over the hyperparameter values
       for distributionNameCells = hyperparameters.distributionNames 
         for numberOfFolds = hyperparameters.numberOfFolds       
           for priorDistribution = priorDistributions
@@ -191,6 +190,7 @@ classdef NBayesClass < handle
                   obj.buildAndTestNBayes(xTrain, yTrain, xTest, yTest, ...
                     distributionNameCells, smootherType, priorDistribution, width, ...
                     classNames, resultRow);
+                  % gather results for this fold
                 accuracies(foldCount) = accuracy;
                 precisions(foldCount) = precision;
                 recalls(foldCount) = recall;
@@ -245,6 +245,8 @@ classdef NBayesClass < handle
       rng(nBayesRandomSeed);
       model = [];
       if width >= 0.0
+        % a width >= 0 means that the distribution name is 'kernel', and
+        % smoother types are used
         model = fitcnb(xTrain, yTrain, ...
           'ClassNames', classNames, 'DistributionNames', string(distributionNames{:,:}), ...
           'Prior', priorDistribution, 'kernel', string(smootherTypes{:,:}), 'width', width);
@@ -252,6 +254,8 @@ classdef NBayesClass < handle
         cellConverter = smootherTypes{1,1};
         smootherTypeName = cellConverter{1,1};
       else
+        % a width < 0 means that there is no width parameter associated with
+        % the distribution names (normal) and no smoother types        
         model = fitcnb(xTrain, yTrain, ...
           'ClassNames', classNames, 'DistributionNames', string(distributionNames{:,:}), ...
           'Prior', priorDistribution);

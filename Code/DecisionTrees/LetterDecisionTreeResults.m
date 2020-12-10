@@ -1,6 +1,7 @@
 classdef LetterDecisionTreeResults < handle
-  %LETTERDECISIONTREERESULTS Summary of this class goes here
-  %   Detailed explanation goes here
+  % Class used to write results to a csv file, load the results csv into an
+  % instance of this class, and functionality to append a row to the
+  % results
   
   properties
     resultsTable = {};
@@ -16,7 +17,7 @@ classdef LetterDecisionTreeResults < handle
   
   methods
     
-    %
+    %%
     % Constructor
     %
     function obj = LetterDecisionTreeResults(csvResultsFilename)
@@ -25,8 +26,8 @@ classdef LetterDecisionTreeResults < handle
       obj.outputResultsFilename = csvResultsFilename;
     end
     
-    %
-    % Open temporary file to write results
+    %%
+    % Open csv file to write results, output header
     % throws exception if error
     function startGatheringResults(obj)
        [h, msg] = fopen(obj.outputResultsFilename, 'w');
@@ -40,6 +41,9 @@ classdef LetterDecisionTreeResults < handle
        fprintf(obj.fileHandle, "%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n", obj.resultsColumnNames(:));
     end
     
+    %%
+    % append a result row to the csv file
+    %
     function appendResult(obj, minLeafSize, minParentSize, maxNumSplit, splitCriterion, ...
                   numberOfFolds, avgTrainLoss, avgTestLoss, ...
                   avgAccuracy, avgPrecision, avgRecall, avgF1, ...
@@ -58,6 +62,9 @@ classdef LetterDecisionTreeResults < handle
               entryCount, elapsedTime, predictTime, randomSeed);
     end
     
+    %%
+    % close the csv file
+    %
     function endGatheringResults(obj)
       if obj.fileHandle == -1
         exception = MException("LetterDecisionTreeResults:endGatheringResults", "Error output file %s is not open", obj.outputResultsTempFilename);
@@ -68,6 +75,10 @@ classdef LetterDecisionTreeResults < handle
       obj.resultsTable = readtable(obj.outputResultsFilename, "Delimiter", "\t");
     end
     
+    %%
+    % Plot a comparison of the performance for the different split
+    % criteria found in the results table
+    %
     function plotCriteriaLoss(obj, plotTitle)
       tDeviance = obj.resultsTable(strcmp(obj.resultsTable.splitCriterion, 'deviance'), :);
       tTwoing = obj.resultsTable(strcmp(obj.resultsTable.splitCriterion, 'twoing'), :);
@@ -110,6 +121,9 @@ classdef LetterDecisionTreeResults < handle
   end % methods
   
   methods(Static)
+    %%
+    % creates an instance of this class by loading a csv file
+    %
     function instance = getInstanceFromCsvResults(csvFilename)
       instance = LetterDecisionTreeResults(csvFilename);
       instance.resultsTable = readtable(csvFilename, "Delimiter", "\t");  

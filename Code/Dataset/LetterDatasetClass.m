@@ -1,4 +1,13 @@
 classdef LetterDatasetClass < handle
+  %
+  % Wrapper class for the dataset.
+  % contains functionality to:
+  % - load the csv file
+  % - split the data into a test and train table. The test table is to be
+  % used as a hold out test: it is only used at the end, to investigate how
+  % the trained model performs with data that has not been seen during
+  % training, or hyperparameter searching.
+  %
     properties  
       % Path to dataset file that is loaded:
       datasetFilePath = "Dataset/letter-recognition.csv";
@@ -220,7 +229,7 @@ classdef LetterDatasetClass < handle
         end
                 
         %
-        % Plot levels
+        % Plot predictor levels of the features
         %
         function plotPredictorLevels(obj, datasetTable, plotTitle)
           [X, Y] = obj.extractXYFromTable(datasetTable);

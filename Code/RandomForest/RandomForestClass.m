@@ -1,10 +1,14 @@
 classdef RandomForestClass < handle
-  %RANDOMFORESTCLASS Summary of this class goes here
-  %   Detailed explanation goes here
+  % This class is used to perform the hyperparameter search for the random
+  % forest method. The functionality to create the final instance of the
+  % model is also present.
   
   properties
+    % parameter values to try in different scenarios:
     hyperparameters;
+    % random stream used for partitioning the train / test data:
     defaultRandomStream;
+    % random stream used for growing the forest:
     treeBaggerRandomStream;
     debug = false;
   end
@@ -69,7 +73,8 @@ classdef RandomForestClass < handle
               [trainingErr, testErr, oobErr, misclassifiedCount, ...
                     model, accuracy, precision, recall, f1, predictTime] = ...
                    obj.buildAndTestTreeBagger(numTree, xTrain, yTrain, xTest, yTest, ...
-                                priorDistribution, numFeature, randomTreeBagSeed);              
+                                priorDistribution, numFeature, randomTreeBagSeed);  
+              % gather the results
               errTrain(foldCount) = trainingErr;
               errValid(foldCount) = testErr;
               errOob(foldCount)  = oobErr;

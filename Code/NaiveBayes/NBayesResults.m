@@ -1,6 +1,7 @@
-classdef NBayesResults < handle
-  %NBAYESRESULTS Summary of this class goes here
-  %   Detailed explanation goes here
+classdef NBayesResults < handle  
+  % Class used to write results to a csv file, load the results csv into an
+  % instance of this class, and functionality to append a row to the
+  % results
   
   properties
     resultsTable = {};
@@ -16,13 +17,16 @@ classdef NBayesResults < handle
   end
   
   methods
+    %%
+    % Constructor
+    %    
     function obj = NBayesResults(csvResultsFilename)
       %create empty results table
       obj.resultsTable = table(obj.resultsColumnNames);
       obj.outputResultsFilename = csvResultsFilename;
     end
     
-    %
+    %%
     % Open file to write results
     % throws exception if error
     function startGatheringResults(obj)    
@@ -37,6 +41,7 @@ classdef NBayesResults < handle
        fprintf(obj.fileHandle, "%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n", obj.resultsColumnNames(:));
     end % function
     
+    %%
     % output a result row to the file
     function appendResult(obj, distributionName, smootherTypeName, width, ...
                   numberOfFolds, randomSeed, avgTrainLoss, avgTestLoss, ...
@@ -58,6 +63,7 @@ classdef NBayesResults < handle
                entryCount, elapsedTime, avgPredictTime);
     end % funcion
     
+    %%
     % close the csv file, load the contents into the resultsTable member
     function endGatheringResults(obj)
       if obj.fileHandle == -1
@@ -72,6 +78,8 @@ classdef NBayesResults < handle
   end % methods
   
   methods(Static)
+    %%
+    % loads the csv file into an instance of this class
     function instance = getInstanceFromCsvResults(csvFilename)
       instance = NBayesResults(csvFilename);
       instance.resultsTable = readtable(csvFilename, "Delimiter", "\t");  

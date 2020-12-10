@@ -1,12 +1,12 @@
 classdef DTreeHyperparametersClass
-  %DTreeHyperparameters Class to represent a set of hyperparameter values
+  %DTreeHyperparameters: Class to represent a set of hyperparameter values
   % Hyperparameter values for the fictree() method are grouped in this
   % class.
   % Convenience configurations are available using getInstance
   % static methods.
   %
   
-  properties
+  properties % default values are set
     % default random stream initial value
     randomSeed = 300;
     % random stream used by default
@@ -65,6 +65,10 @@ classdef DTreeHyperparametersClass
       hyperparameters.splitCriteria = ["deviance"];      
     end
     
+    %
+    % These are the hyperparameters used to create the final model.
+    % The numberOfFolds is set to -1, because the is no crossvalidation
+    % when creating the final model.
     function hyperparameters = getFinalHyperparameterInstance()
       hyperparameters = DTreeHyperparametersClass();
       hyperparameters.randomSeed = 192;

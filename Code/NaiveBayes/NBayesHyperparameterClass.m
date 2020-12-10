@@ -1,6 +1,6 @@
 classdef NBayesHyperparameterClass < handle
-  %NBAYESHYPERPARAMETERCLASS Summary of this class goes here
-  %   Detailed explanation goes here
+  % Class used to store the hyperparameters used when performing the
+  % hyperparameter search.
   
   properties
       randomSeed = 110;
@@ -11,6 +11,10 @@ classdef NBayesHyperparameterClass < handle
   end % properties
   
   methods
+    
+    %%
+    % Constructor
+    %
     function obj = NBayesHyperparameterClass()
 
     end
@@ -19,6 +23,7 @@ classdef NBayesHyperparameterClass < handle
   methods(Static)
     %% Convenience hyperparameter constructors (static)
     
+    %%
     % get an instance for testing the code works, without kernel widths: 
     % quick run through most of the code
     function hyperparameters = getQuickTestHyperparametersInstance(nBayes)
