@@ -119,7 +119,7 @@ classdef LetterDatasetClass < handle
         %%
         % Display dataset summary information 
         function displayDatasetInformation(obj)
-          normText = "(~normalised)";
+          normText = "(scaled)";
           if obj.isNormalised
             normText = "(normalised)";
           end
@@ -131,7 +131,7 @@ classdef LetterDatasetClass < handle
         %%
         % Display plots of the dataset
         function displayDatasetPlots(obj)
-          normText = "(~normalised)";
+          normText = "(scaled)";
           if obj.isNormalised
             normText = "(normalised)";
           end
@@ -181,6 +181,11 @@ classdef LetterDatasetClass < handle
         function displayScatterMatrix(obj, datasetTable, plotTitle)
           [x, y] = obj.extractXYFromTable(datasetTable);
           fig = figure("Name", plotTitle);
+          fig_Position = fig.Position;
+          % make it bigger to display figures:
+          fig_Position(3) = fig_Position(3)*1.5;
+          fig_Position(4) = fig_Position(4)*1.5;
+          fig.Position = fig_Position;
           mat = table2array(x);
           targetMat = table2array(y);
           xnames = obj.featureNames;
@@ -196,15 +201,11 @@ classdef LetterDatasetClass < handle
             ax(numFeatures, xy).XLabel.Rotation = 45;
             ax(numFeatures, xy).XTickLabel = [''];
             ax(numFeatures, xy).XLabel.HorizontalAlignment = 'right';
-            ax(numFeatures, 1).YLabel.Rotation = 0;
-            ax(numFeatures, 1).YTickLabel = [''];
-            ax(numFeatures, 1).YLabel.HorizontalAlignment = 'right';
-          end
-          fig_Position = fig.Position;
-          % make it bigger to display figures:
-          fig_Position(3) = fig_Position(3)*1.5;
-          fig_Position(4) = fig_Position(4)*1.5;
-          fig.Position = fig_Position;
+            ax(xy, 1).YTickLabel = [''];
+            ax(xy, 1).YLabel.Rotation = 0;
+            ax(xy, 1).YLabel.HorizontalAlignment = 'right';
+          end        
+
         end
         
         %
