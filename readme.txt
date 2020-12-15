@@ -66,10 +66,12 @@ Code: contains the MATLAB code that runs the project.
         - RFResults.m: class used to save and load the results to/from a csv file.
         - TestRandomForest.mlx: live script that uses RandomForestClass.m to 
             perform several hyperparameter searches, and display the results, build the final model.
-thirdPartyCode: code found on the internet that is used in this project.
-     - heatmap2.m: Ameya Deoras (2020). Customizable Heat Maps 
-       (https://www.mathworks.com/matlabcentral/fileexchange/24253-customizable-heat-maps), 
-        MATLAB Central File Exchange. Retrieved November 2, 2020.          
+     - thirdPartyCode: code found on the internet that is used in this project.
+        - heatmap2.m: Ameya Deoras (2020). Customizable Heat Maps 
+          (https://www.mathworks.com/matlabcentral/fileexchange/24253-customizable-heat-maps), 
+          MATLAB Central File Exchange. Retrieved November 2, 2020.     
+Images: images used in the poster and additional materials
+LivescriptPdfs: contains a set of relevant pdf's generated from the livescripts.
 Utilities: classes which contain functionality that is used several times.
      - CalcUtil.m: has a static method to calculate performance petrics: accuracy,
         precision, recall, F1.
